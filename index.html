@@ -83,7 +83,7 @@
             <h3 id="workoutDate" class="text-xs sm:text-base font-bold text-slate-100 truncate">-</h3>
             <div class="flex items-center gap-2 shrink-0">
               <span id="workoutTrimp" class="text-[11px] sm:text-xs font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-slate-800 text-slate-300 whitespace-nowrap">-</span>
-              <button onclick="deleteCurrentWorkout()" class="text-slate-500 hover:text-rose-400 p-1 rounded-lg hover:bg-rose-950/30 transition" title="Excluir treino">
+              <button onclick="deleteCurrentWorkout()" class="text-slate-500 hover:text-rose-400 p-1 rounded-lg hover:bg-rose-950/30 transition" title="Excluir treino permanentemente deste painel">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                 </svg>
@@ -307,12 +307,13 @@
     async function deleteCurrentWorkout() {
       if (!currentWorkout) return;
 
-      const confirmar = confirm(`Tem certeza que deseja excluir o treino de ${formatWorkoutHeader(currentWorkout)}?\n\nLembre-se de excluí-lo também no Intervals.icu para não ser resincronizado.`);
+      const confirmar = confirm(`Deseja excluir permanentemente o treino de ${formatWorkoutHeader(currentWorkout)} deste painel?`);
       if (!confirmar) return;
 
+      // Soft delete: marca o treino como deletado para nunca mais ser resincronizado
       const { error } = await supabaseClient
         .from('workouts')
-        .delete()
+        .update({ is_deleted: true })
         .eq('id', currentWorkout.id);
 
       if (error) {
@@ -350,7 +351,8 @@
         return;
       }
 
-      allWorkouts = data || [];
+      // Filtra os treinos excluídos logicamente
+      allWorkouts = (data || []).filter(w => !w.is_deleted);
       renderWorkoutList();
       renderPmcChart();
       renderVolumeCharts();
