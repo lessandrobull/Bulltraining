@@ -10,6 +10,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans pb-10">
 
+  <!-- Configuração do Supabase -->
   <script>
     const SUPABASE_URL = "https://xttzilpuuqjbztjkeadd.supabase.co";
     const SUPABASE_KEY = "sb_publishable_uexabKupvCYRAAPqRiETSQ_I01UsSZI";
@@ -75,11 +76,19 @@
         </div>
       </div>
 
+      <!-- Detalhes do Treino -->
       <div id="workoutDetailContainer" class="bg-slate-900 border border-slate-800 p-3 sm:p-5 rounded-2xl shadow space-y-4 hidden">
         <div class="border-b border-slate-800 pb-2.5">
           <div class="flex items-center justify-between gap-2">
             <h3 id="workoutDate" class="text-xs sm:text-base font-bold text-slate-100 truncate">-</h3>
-            <span id="workoutTrimp" class="text-[11px] sm:text-xs font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-slate-800 text-slate-300 whitespace-nowrap shrink-0">-</span>
+            <div class="flex items-center gap-2 shrink-0">
+              <span id="workoutTrimp" class="text-[11px] sm:text-xs font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-slate-800 text-slate-300 whitespace-nowrap">-</span>
+              <button onclick="deleteCurrentWorkout()" class="text-slate-500 hover:text-rose-400 p-1 rounded-lg hover:bg-rose-950/30 transition" title="Excluir treino">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -295,10 +304,31 @@
       }
     }
 
+    async function deleteCurrentWorkout() {
+      if (!currentWorkout) return;
+
+      const confirmar = confirm(`Tem certeza que deseja excluir o treino de ${formatWorkoutHeader(currentWorkout)}?\n\nLembre-se de excluí-lo também no Intervals.icu para não ser resincronizado.`);
+      if (!confirmar) return;
+
+      const { error } = await supabaseClient
+        .from('workouts')
+        .delete()
+        .eq('id', currentWorkout.id);
+
+      if (error) {
+        showAlert('Erro ao excluir treino: ' + error.message, true);
+        return;
+      }
+
+      showAlert('Treino excluído com sucesso!');
+      currentWorkout = null;
+      switchTab('tab-workouts');
+      await loadWorkouts();
+    }
+
     async function loadWorkouts() {
       await loadSettings();
 
-      // Sincronização automática com retorno visual
       try {
         const syncRes = await fetch('/api/sync');
         const syncData = await syncRes.json();
