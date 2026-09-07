@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Treinos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans pb-12">
+
+  <!-- Configuração do Supabase -->
+  <script>
+    const SUPABASE_URL = "https://xttzilpuuqjbztjkeadd.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_uexabKupvCYRAAPqRiETSQ_I01UsSZI";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  </script>
+
+  <!-- Cabeçalho -->
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 px-4 py-3 sm:px-6 shadow-md">
+    <div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-3">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight text-emerald-400">Hub de Corrida</h1>
+        <p class="text-xs text-slate-400">Gestão de Carga & Evolução</p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <label class="cursor-pointer bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl transition duration-200 shadow inline-flex items-center gap-2">
+          <span>+ Subir TCX</span>
+          <input type="file" id="tcxInput" accept=".tcx" multiple class="hidden">
+        </label>
+      </div>
+    </div>
+
+    <!-- Navegação por Abas -->
+    <div class="max-w-6xl mx-auto flex gap-6 mt-3 border-t border-slate-800/60 pt-2 text-sm font-medium">
+      <button onclick="switchTab('tab-workouts')" id="btn-tab-workouts" class="text-emerald-400 border-b-2 border-emerald-400 pb-1">Treinos</button>
+      <button onclick="switchTab('tab-pmc')" id="btn-tab-pmc" class="text-slate-400 hover:text-slate-200 pb-1">Fitness & Fadiga (PMC)</button>
+      <button onclick="switchTab('tab-volume')" id="btn-tab-volume" class="text-slate-400 hover:text-slate-200 pb-1">Volume (Semanas & Meses)</button>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
+
+    <!-- Status de Alerta / Carregamento -->
+    <div id="statusAlert" class="hidden p-3 rounded-xl text-sm border"></div>
+
+    <!-- ABA 1: TREINOS & DETALHES -->
+    <section id="tab-workouts" class="space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Lista Histórica de Treinos -->
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow h-[480px] flex flex-col">
+          <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-3">Histórico de Atividades</h2>
+          <div id="workoutList" class="overflow-y-auto space-y-2 flex-1 pr-1">
+            <p class="text-slate-500 text-sm">Carregando treinos...</p>
+          </div>
+        </div>
+
+        <!-- Detalhamento do Treino Selecionado -->
+        <div class="lg:col-span-2 space-y-4">
+          <div id="selectedWorkoutCard" class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow space-y-4">
+            <div class="flex justify-between items-start border-b border-slate-800 pb-3">
+              <div>
+                <h3 id="workoutDate" class="text-lg font-bold text-slate-100">Selecione um treino</h3>
+                <span id="workoutSport" class="text-xs text-slate-400">Detalhes gerais</span>
+              </div>
+              <span id="workoutTrimp" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300">-</span>
+            </div>
+
+            <!-- Cards Resumo do Treino -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+              <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                <span class="text-xs text-slate-400 font-medium">Distância</span>
+                <p id="detDist" class="text-lg font-black text-slate-50 mt-0.5">-</p>
+              </div>
+              <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                <span class="text-xs text-slate-400 font-medium">Duração</span>
+                <p id="detTime" class="text-lg font-black text-slate-50 mt-0.5">-</p>
+              </div>
+              <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                <span class="text-xs text-slate-400 font-medium">Pace Médio</span>
+                <p id="detPace" class="text-lg font-black text-emerald-400 mt-0.5">-</p>
+              </div>
+              <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                <span class="text-xs text-slate-400 font-medium">FC Média / Máx</span>
+                <p id="detHr" class="text-lg font-black text-rose-400 mt-0.5">-</p>
+              </div>
+            </div>
+
+            <!-- Gráfico do Treino (FC e Altimetria) -->
+            <div class="h-60 w-full relative pt-2">
+              <canvas id="workoutDetailChart"></canvas>
+            </div>
+
+            <!-- Tabela de Splits por Km -->
+            <div class="overflow-x-auto border-t border-slate-800 pt-3">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="text-slate-400 border-b border-slate-800">
+                    <th class="py-2">Km</th>
+                    <th class="py-2">Tempo</th>
+                    <th class="py-2">Pace</th>
+                    <th class="py-2">FC Média</th>
+                    <th class="py-2">FC Máx</th>
+                  </tr>
+                </thead>
+                <tbody id="splitsTableBody" class="divide-y divide-slate-800/60"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 2: PMC (FITNESS, FADIGA E FORMA) -->
+    <section id="tab-pmc" class="hidden space-y-6">
+      <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow space-y-4">
+        <div>
+          <h2 class="text-lg font-bold text-slate-100">Performance Management Chart (PMC)</h2>
+          <p class="text-xs text-slate-400">
+            <span class="text-sky-400 font-semibold">Fitness (CTL 42d)</span>: Condicionamento acumulado | 
+            <span class="text-rose-400 font-semibold">Fadiga (ATL 7d)</span>: Cansaço recente | 
+            <span class="text-amber-400 font-semibold">Forma (TSB)</span>: Equilíbrio para provas (positivo = descansado)
+          </p>
+        </div>
+        <div class="h-96 w-full relative">
+          <canvas id="pmcChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 3: VOLUME SEMANAL E MENSAL -->
+    <section id="tab-volume" class="hidden space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Gráfico Semanal -->
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow space-y-3">
+          <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider">Volume Semanal (km)</h2>
+          <div class="h-64 w-full relative">
+            <canvas id="weeklyVolumeChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Gráfico Mensal -->
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow space-y-3">
+          <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider">Volume Mensal (km)</h2>
+          <div class="h-64 w-full relative">
+            <canvas id="monthlyVolumeChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    let allWorkouts = [];
+    let detailChartInstance = null;
+    let pmcChartInstance = null;
+    let weeklyChartInstance = null;
+    let monthlyChartInstance = null;
+
+    // Alternar Abas
+    function switchTab(tabId) {
+      ['tab-workouts', 'tab-pmc', 'tab-volume'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+        document.getElementById(`btn-${id}`).className = 'text-slate-400 hover:text-slate-200 pb-1';
+      });
+      document.getElementById(tabId).classList.remove('hidden');
+      document.getElementById(`btn-${tabId}`).className = 'text-emerald-400 border-b-2 border-emerald-400 pb-1';
+    }
+
+    function showAlert(msg, isError = false) {
+      const alert = document.getElementById('statusAlert');
+      alert.textContent = msg;
+      alert.className = `p-3 rounded-xl text-sm border ${isError ? 'bg-rose-950/40 text-rose-300 border-rose-800' : 'bg-emerald-950/40 text-emerald-300 border-emerald-800'}`;
+      alert.classList.remove('hidden');
+      setTimeout(() => alert.classList.add('hidden'), 5000);
+    }
+
+    function formatTime(secs) {
+      const m = Math.floor(secs / 60);
+      const s = Math.floor(secs % 60);
+      return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function formatPace(secs, meters) {
+      if (!meters || meters === 0) return "-";
+      const spk = secs / (meters / 1000);
+      return `${formatTime(spk)} /km`;
+    }
+
+    // Carregar todos os treinos do Supabase
+    async function loadWorkouts() {
+      const { data, error } = await supabaseClient
+        .from('workouts')
+        .select('*')
+        .order('start_time', { ascending: false });
+
+      if (error) {
+        console.error(error);
+        showAlert('Erro ao carregar dados do Supabase.', true);
+        return;
+      }
+
+      allWorkouts = data || [];
+      renderWorkoutList();
+      if (allWorkouts.length > 0) {
+        selectWorkout(allWorkouts[0].id);
+      }
+      renderPmcChart();
+      renderVolumeCharts();
+    }
+
+    // Renderizar Lista Lateral de Treinos
+    function renderWorkoutList() {
+      const listEl = document.getElementById('workoutList');
+      if (allWorkouts.length === 0) {
+        listEl.innerHTML = `<p class="text-slate-500 text-sm p-2">Nenhum treino salvo ainda. Carregue seu arquivo .tcx no botão acima.</p>`;
+        return;
+      }
+
+      listEl.innerHTML = allWorkouts.map(w => {
+        const d = new Date(w.start_time);
+        const dateStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+        const km = (w.distance_meters / 1000).toFixed(2);
+        const pace = formatPace(w.duration_seconds, w.distance_meters);
+        return `
+          <button onclick="selectWorkout('${w.id}')" class="w-full text-left p-3 rounded-xl bg-slate-950/60 hover:bg-slate-800 border border-slate-800 transition flex justify-between items-center">
+            <div>
+              <p class="text-xs font-semibold text-slate-200">${dateStr}</p>
+              <p class="text-xs text-emerald-400 font-bold mt-0.5">${km} km <span class="text-slate-400 font-normal">| ${pace}</span></p>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-medium">TRIMP: ${Math.round(w.trimp_score || 0)}</span>
+            </div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    // Selecionar e Detalhar Treino
+    function selectWorkout(id) {
+      const w = allWorkouts.find(item => item.id === id);
+      if (!w) return;
+
+      const d = new Date(w.start_time);
+      document.getElementById('workoutDate').textContent = d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      document.getElementById('workoutSport').textContent = `Esporte: ${w.sport.toUpperCase()}`;
+      document.getElementById('workoutTrimp').textContent = `Carga TRIMP: ${Math.round(w.trimp_score || 0)}`;
+
+      document.getElementById('detDist').textContent = `${(w.distance_meters / 1000).toFixed(2)} km`;
+      document.getElementById('detTime').textContent = formatTime(w.duration_seconds);
+      document.getElementById('detPace').textContent = formatPace(w.duration_seconds, w.distance_meters);
+      document.getElementById('detHr').textContent = `${w.avg_heart_rate || '-'} / ${w.max_heart_rate || '-'} bpm`;
+
+      // Splits
+      const splitsBody = document.getElementById('splitsTableBody');
+      const laps = w.laps || [];
+      splitsBody.innerHTML = laps.map((lap, idx) => `
+        <tr class="hover:bg-slate-800/40 text-slate-300">
+          <td class="py-2 font-semibold text-slate-200">${idx + 1}</td>
+          <td class="py-2">${formatTime(lap.seconds)}</td>
+          <td class="py-2 font-bold text-emerald-400">${formatPace(lap.seconds, lap.meters)}</td>
+          <td class="py-2">${lap.avgHr || '-'} bpm</td>
+          <td class="py-2">${lap.maxHr || '-'} bpm</td>
+        </tr>
+      `).join('');
+
+      // Gráfico de FC e Altimetria do Treino
+      renderDetailChart(w.trackpoints || []);
+    }
+
+    function renderDetailChart(trackpoints) {
+      const ctx = document.getElementById('workoutDetailChart').getContext('2d');
+      if (detailChartInstance) detailChartInstance.destroy();
+
+      const labels = trackpoints.map(tp => `${(tp.dist / 1000).toFixed(2)}k`);
+      const hrData = trackpoints.map(tp => tp.hr);
+      const altData = trackpoints.map(tp => tp.alt);
+
+      detailChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'FC (bpm)',
+              data: hrData,
+              borderColor: '#f43f5e',
+              yAxisID: 'yHr',
+              borderWidth: 1.8,
+              tension: 0.2,
+              pointRadius: 0
+            },
+            {
+              label: 'Altimetria (m)',
+              data: altData,
+              borderColor: '#38bdf8',
+              backgroundColor: 'rgba(56, 189, 248, 0.08)',
+              yAxisID: 'yAlt',
+              borderWidth: 1.5,
+              tension: 0.2,
+              fill: true,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          scales: {
+            x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', maxTicksLimit: 8 } },
+            yHr: { type: 'linear', position: 'left', grid: { color: '#1e293b' }, ticks: { color: '#f43f5e' } },
+            yAlt: { type: 'linear', position: 'right', grid: { display: false }, ticks: { color: '#38bdf8' } }
+          },
+          plugins: { legend: { labels: { color: '#94a3b8', boxWidth: 12 } } }
+        }
+      });
+    }
+
+    // Cálculo e Renderização do Modelo de Banister (PMC: Fitness, Fatigue, Form)
+    function renderPmcChart() {
+      if (allWorkouts.length === 0) return;
+
+      const sorted = [...allWorkouts].sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
+      const firstDate = new Date(sorted[0].start_time);
+      firstDate.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Mapear estresse por dia
+      const dailyTrimp = {};
+      sorted.forEach(w => {
+        const dStr = new Date(w.start_time).toISOString().split('T')[0];
+        dailyTrimp[dStr] = (dailyTrimp[dStr] || 0) + (w.trimp_score || 0);
+      });
+
+      const dates = [];
+      const ctlData = [];
+      const atlData = [];
+      const tsbData = [];
+
+      let ctl = 0;
+      let atl = 0;
+
+      for (let d = new Date(firstDate); d <= today; d.setDate(d.getDate() + 1)) {
+        const dStr = d.toISOString().split('T')[0];
+        const dayTrimp = dailyTrimp[dStr] || 0;
+
+        // Fórmula EWMA (Exponential Weighted Moving Average)
+        ctl = ctl + (dayTrimp - ctl) / 42;
+        atl = atl + (dayTrimp - atl) / 7;
+        const tsb = ctl - atl;
+
+        dates.push(d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+        ctlData.push(ctl.toFixed(1));
+        atlData.push(atl.toFixed(1));
+        tsbData.push(tsb.toFixed(1));
+      }
+
+      const ctx = document.getElementById('pmcChart').getContext('2d');
+      if (pmcChartInstance) pmcChartInstance.destroy();
+
+      pmcChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [
+            { label: 'Fitness (CTL 42d)', data: ctlData, borderColor: '#38bdf8', borderWidth: 2, tension: 0.2, pointRadius: 0 },
+            { label: 'Fadiga (ATL 7d)', data: atlData, borderColor: '#f43f5e', borderWidth: 1.5, tension: 0.2, pointRadius: 0 },
+            { label: 'Forma (TSB)', data: tsbData, borderColor: '#fbbf24', backgroundColor: 'rgba(251, 191, 36, 0.1)', borderWidth: 1.5, tension: 0.2, fill: true, pointRadius: 0 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          scales: {
+            x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', maxTicksLimit: 12 } },
+            y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }
+          },
+          plugins: { legend: { labels: { color: '#cbd5e1' } } }
+        }
+      });
+    }
+
+    // Gráficos de Volume Semanal e Mensal
+    function renderVolumeCharts() {
+      if (allWorkouts.length === 0) return;
+
+      const weeklyKm = {};
+      const monthlyKm = {};
+
+      allWorkouts.forEach(w => {
+        const d = new Date(w.start_time);
+        const km = w.distance_meters / 1000;
+
+        // Chave Mês
+        const mKey = `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+        monthlyKm[mKey] = (monthlyKm[mKey] || 0) + km;
+
+        // Chave Semana (Início da semana)
+        const weekDate = new Date(d);
+        weekDate.setDate(d.getDate() - d.getDay());
+        const wKey = `${weekDate.getDate().toString().padStart(2, '0')}/${(weekDate.getMonth() + 1).toString().padStart(2, '0')}`;
+        weeklyKm[wKey] = (weeklyKm[wKey] || 0) + km;
+      });
+
+      // Render Semanal
+      const ctxW = document.getElementById('weeklyVolumeChart').getContext('2d');
+      if (weeklyChartInstance) weeklyChartInstance.destroy();
+      weeklyChartInstance = new Chart(ctxW, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(weeklyKm).slice(-8),
+          datasets: [{ label: 'km / semana', data: Object.values(weeklyKm).slice(-8).map(v => v.toFixed(1)), backgroundColor: '#10b981', borderRadius: 6 }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#64748b' } },
+            y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }
+          }
+        }
+      });
+
+      // Render Mensal
+      const ctxM = document.getElementById('monthlyVolumeChart').getContext('2d');
+      if (monthlyChartInstance) monthlyChartInstance.destroy();
+      monthlyChartInstance = new Chart(ctxM, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(monthlyKm).slice(-6),
+          datasets: [{ label: 'km / mês', data: Object.values(monthlyKm).slice(-6).map(v => v.toFixed(1)), backgroundColor: '#6366f1', borderRadius: 6 }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#64748b' } },
+            y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }
+          }
+        }
+      });
+    }
+
+    // Leitor e Parser de TCX (Upload e Salvamento no Supabase)
+    document.getElementById('tcxInput').addEventListener('change', async function(e) {
+      const files = Array.from(e.target.files);
+      if (files.length === 0) return;
+
+      showAlert(`Processando ${files.length} arquivo(s)...`);
+
+      for (const file of files) {
+        const text = await file.text();
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(text, 'text/xml');
+
+        const activity = xml.getElementsByTagName('Activity')[0];
+        if (!activity) continue;
+
+        const startTime = activity.getElementsByTagName('Id')[0]?.textContent || new Date().toISOString();
+        const sport = activity.getAttribute('Sport') || 'running';
+
+        let totalMeters = 0;
+        let totalSecs = 0;
+        let hrWeightedSum = 0;
+        let maxHr = 0;
+        const lapsData = [];
+
+        const laps = xml.getElementsByTagName('Lap');
+        for (let i = 0; i < laps.length; i++) {
+          const lap = laps[i];
+          const secs = parseFloat(lap.getElementsByTagName('TotalTimeSeconds')[0]?.textContent || 0);
+          const meters = parseFloat(lap.getElementsByTagName('DistanceMeters')[0]?.textContent || 0);
+          const avgHrVal = parseInt(lap.getElementsByTagName('AverageHeartRateBpm')[0]?.getElementsByTagName('Value')[0]?.textContent || 0);
+          const maxHrVal = parseInt(lap.getElementsByTagName('MaximumHeartRateBpm')[0]?.getElementsByTagName('Value')[0]?.textContent || 0);
+
+          totalMeters += meters;
+          totalSecs += secs;
+          if (avgHrVal > 0) hrWeightedSum += avgHrVal * secs;
+          if (maxHrVal > maxHr) maxHr = maxHrVal;
+
+          lapsData.push({ lap: i + 1, seconds: secs, meters: meters, avgHr: avgHrVal, maxHr: maxHrVal });
+        }
+
+        const avgHrTotal = totalSecs > 0 ? Math.round(hrWeightedSum / totalSecs) : 0;
+
+        // Amostragem de Trackpoints (reduzir tamanho salvo)
+        const tps = xml.getElementsByTagName('Trackpoint');
+        const sampledPoints = [];
+        for (let j = 0; j < tps.length; j += 3) {
+          const pt = tps[j];
+          const dist = parseFloat(pt.getElementsByTagName('DistanceMeters')[0]?.textContent || 0);
+          const hr = parseInt(pt.getElementsByTagName('HeartRateBpm')[0]?.getElementsByTagName('Value')[0]?.textContent || 0);
+          const alt = parseFloat(pt.getElementsByTagName('AltitudeMeters')[0]?.textContent || 0);
+          sampledPoints.push({ dist, hr, alt });
+        }
+
+        // Cálculo do TRIMP (Baseado em FC repouso 50 e FC máx 185)
+        const hrRest = 50;
+        const hrMax = 185;
+        const hrRatio = avgHrTotal > hrRest ? (avgHrTotal - hrRest) / (hrMax - hrRest) : 0;
+        const durationMin = totalSecs / 60;
+        const trimp = durationMin * hrRatio * 0.64 * Math.exp(1.92 * hrRatio);
+
+        // Inserir no Supabase (upsert para evitar duplicatas por start_time)
+        const { error } = await supabaseClient
+          .from('workouts')
+          .upsert({
+            start_time: startTime,
+            sport: sport,
+            distance_meters: totalMeters,
+            duration_seconds: totalSecs,
+            avg_heart_rate: avgHrTotal,
+            max_heart_rate: maxHr,
+            trimp_score: trimp,
+            laps: lapsData,
+            trackpoints: sampledPoints
+          }, { onConflict: 'start_time' });
+
+        if (error) {
+          console.error(error);
+          showAlert(`Erro ao salvar treino de ${startTime}: ${error.message}`, true);
+        }
+      }
+
+      showAlert('Treino(s) processado(s) e salvo(s) com sucesso!');
+      await loadWorkouts();
+      e.target.value = '';
+    });
+
+    // Início automático
+    loadWorkouts();
+  </script>
+</body>
+</html>
