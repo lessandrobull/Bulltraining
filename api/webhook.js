@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // Resposta rápida para checagens do Intervals.icu
   if (req.method === 'GET') {
     return res.status(200).json({ status: 'Webhook ativo e pronto' });
   }
@@ -12,15 +11,21 @@ export default async function handler(req, res) {
   const authHeader = 'Basic ' + Buffer.from('API_KEY:' + API_KEY).toString('base64');
 
   try {
-    // Identificar o ID da atividade enviada no evento
     const body = req.body || {};
-    const activityId = body.activity_id || body.activityId || body.id || req.query.activity_id;
-
-    if (!activityId) {
-      return res.status(200).json({ message: 'Nenhum activity_id informado no evento.' });
+    
+    // Captura o ID da atividade tanto em lote quanto direto
+    let activityId = null;
+    if (body.events && body.events.length > 0) {
+      activityId = body.events[0].activity_id || body.events[0].id;
+    } else {
+      activityId = body.activity_id || body.activityId || body.id || req.query.activity_id;
     }
 
-    // 1. Buscar os detalhes completos da atividade no Intervals.icu
+    if (!activityId) {
+      return res.status(200).json({ message: 'Evento recebido, mas sem activity_id válido.' });
+    }
+
+    // 1. Buscar detalhes completos da atividade no Intervals.icu
     const actRes = await fetch(`https://intervals.icu/api/v1/activity/${activityId}`, {
       headers: { Authorization: authHeader }
     });
@@ -31,7 +36,7 @@ export default async function handler(req, res) {
 
     const act = await actRes.json();
 
-    // 2. Buscar telemetria de pontos (distância, FC, altitude) para o gráfico
+    // 2. Buscar pontos para altimetria e FC
     let trackpoints = [];
     try {
       const streamRes = await fetch(`https://intervals.icu/api/v1/activity/${activityId}/streams?types=time,distance,heartrate,altitude`, {
@@ -52,10 +57,10 @@ export default async function handler(req, res) {
         }
       }
     } catch (e) {
-      console.warn('Streams não disponíveis para este treino:', e);
+      console.warn('Streams indisponíveis:', e);
     }
 
-    // 3. Montar splits por volta (Laps)
+    // 3. Montar voltas (Splits)
     const laps = (act.laps || []).map((l, idx) => ({
       lap: idx + 1,
       seconds: l.moving_time || l.elapsed_time || 0,
@@ -64,7 +69,7 @@ export default async function handler(req, res) {
       maxHr: Math.round(l.max_heartrate || 0)
     }));
 
-    // 4. Buscar zonas do atleta salvas no Supabase para calibrar o TRIMP
+    // 4. Buscar zonas no Supabase
     let hrRest = 50;
     let hrMax = 185;
     try {
@@ -90,7 +95,7 @@ export default async function handler(req, res) {
     const hrRatio = avgHr > hrRest ? (avgHr - hrRest) / (hrMax - hrRest) : 0;
     const trimp = durationMin * hrRatio * 0.64 * Math.exp(1.92 * hrRatio);
 
-    // 6. Gravar ou atualizar o treino no Supabase
+    // 6. Gravar no Supabase
     const supabasePayload = {
       start_time: act.start_date_local || act.start_date,
       sport: (act.type || 'running').toLowerCase(),
