@@ -307,6 +307,13 @@
     async function loadWorkouts() {
       await loadSettings();
 
+      // Sincronização automática com o Intervals.icu ao carregar o app
+      try {
+        await fetch('/api/sync');
+      } catch (e) {
+        console.warn('Sync automático:', e);
+      }
+
       const { data, error } = await supabaseClient
         .from('workouts')
         .select('*')
