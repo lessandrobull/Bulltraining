@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans pb-12">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans pb-10">
 
   <!-- Configuração do Supabase -->
   <script>
@@ -17,23 +17,22 @@
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   </script>
 
-  <!-- Cabeçalho -->
-  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 px-4 py-3 sm:px-6 shadow-md">
-    <div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-3">
+  <!-- Cabeçalho Compacto -->
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 px-3 py-2 sm:px-6 sm:py-2.5 shadow-md">
+    <div class="max-w-6xl mx-auto flex justify-between items-center gap-2">
       <div>
-        <h1 class="text-xl font-bold tracking-tight text-emerald-400">Hub de Corrida</h1>
-        <p class="text-xs text-slate-400">Gestão de Carga & Evolução</p>
+        <h1 class="text-lg sm:text-xl font-bold tracking-tight text-emerald-400">Hub de Corrida</h1>
+        <p class="text-[11px] sm:text-xs text-slate-400">Gestão de Carga & Evolução</p>
       </div>
 
-      <div class="flex items-center gap-2">
-        <label class="cursor-pointer bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl transition duration-200 shadow inline-flex items-center gap-2">
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <label class="cursor-pointer bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs sm:text-sm font-semibold px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl transition duration-200 shadow inline-flex items-center gap-1.5">
           <span>+ Subir TCX</span>
           <input type="file" id="tcxInput" accept=".tcx" multiple class="hidden">
         </label>
         
-        <!-- Botão de Configurações (Engrenagem) -->
-        <button onclick="openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-xl border border-slate-700 transition shadow" title="Configurações de Frequência Cardíaca">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button onclick="openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-1.5 sm:p-2 rounded-xl border border-slate-700 transition shadow" title="Configurações de Frequência Cardíaca">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
           </svg>
@@ -42,17 +41,17 @@
     </div>
 
     <!-- Navegação por Abas -->
-    <div class="max-w-6xl mx-auto flex gap-6 mt-3 border-t border-slate-800/60 pt-2 text-sm font-medium">
-      <button onclick="switchTab('tab-workouts')" id="btn-tab-workouts" class="text-emerald-400 border-b-2 border-emerald-400 pb-1">Treinos</button>
-      <button onclick="switchTab('tab-pmc')" id="btn-tab-pmc" class="text-slate-400 hover:text-slate-200 pb-1">Fitness & Fadiga</button>
-      <button onclick="switchTab('tab-volume')" id="btn-tab-volume" class="text-slate-400 hover:text-slate-200 pb-1">Volume</button>
+    <div class="max-w-6xl mx-auto flex gap-6 mt-1.5 sm:mt-2 border-t border-slate-800/60 pt-1.5 text-xs sm:text-sm font-medium">
+      <button onclick="switchTab('tab-workouts')" id="btn-tab-workouts" class="text-emerald-400 border-b-2 border-emerald-400 pb-0.5">Treinos</button>
+      <button onclick="switchTab('tab-pmc')" id="btn-tab-pmc" class="text-slate-400 hover:text-slate-200 pb-0.5">Fitness & Fadiga</button>
+      <button onclick="switchTab('tab-volume')" id="btn-tab-volume" class="text-slate-400 hover:text-slate-200 pb-0.5">Volume</button>
     </div>
   </header>
 
   <!-- Modal de Configuração de FC -->
   <div id="settingsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
-      <h3 class="text-base font-bold text-slate-100">Zonas e Frequência Cardíaca</h3>
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl">
+      <h3 class="text-sm font-bold text-slate-100">Zonas e Frequência Cardíaca</h3>
       <div>
         <label class="text-xs text-slate-400 block mb-1">FC de Repouso (bpm)</label>
         <input type="number" id="inputHrRest" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
@@ -68,64 +67,65 @@
     </div>
   </div>
 
-  <main class="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
+  <!-- Conteúdo Principal -->
+  <main class="max-w-6xl mx-auto px-2 sm:px-6 py-2.5 sm:py-3.5 space-y-3 sm:space-y-4">
 
     <div id="statusAlert" class="hidden p-3 rounded-xl text-sm border"></div>
 
-    <!-- ABA 1: TREINOS (Alternância de Lista e Detalhes no mesmo espaço) -->
-    <section id="tab-workouts" class="space-y-6">
+    <!-- ABA 1: TREINOS -->
+    <section id="tab-workouts" class="space-y-4">
       
-      <!-- Visão 1: Lista de Treinos em Espaço Completo -->
-      <div id="workoutListContainer" class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow">
-        <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4">Histórico de Atividades</h2>
-        <div id="workoutList" class="space-y-2.5">
+      <!-- Lista de Treinos -->
+      <div id="workoutListContainer" class="bg-slate-900 border border-slate-800 p-3 sm:p-5 rounded-2xl shadow">
+        <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider mb-3">Histórico de Atividades</h2>
+        <div id="workoutList" class="space-y-2">
           <p class="text-slate-500 text-sm">Carregando treinos...</p>
         </div>
       </div>
 
-      <!-- Visão 2: Quadro de Detalhes do Treino (Aberto no mesmo espaço) -->
-      <div id="workoutDetailContainer" class="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-2xl shadow space-y-5 hidden">
-        <div class="flex justify-between items-start border-b border-slate-800 pb-3">
+      <!-- Detalhes do Treino -->
+      <div id="workoutDetailContainer" class="bg-slate-900 border border-slate-800 p-3 sm:p-5 rounded-2xl shadow space-y-4 hidden">
+        <div class="flex justify-between items-start border-b border-slate-800 pb-2.5">
           <div>
-            <h3 id="workoutDate" class="text-lg font-bold text-slate-100">-</h3>
+            <h3 id="workoutDate" class="text-base sm:text-lg font-bold text-slate-100">-</h3>
             <span id="workoutSport" class="text-xs text-slate-400">Detalhes da atividade</span>
           </div>
-          <span id="workoutTrimp" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300">-</span>
+          <span id="workoutTrimp" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 whitespace-nowrap">-</span>
         </div>
 
         <!-- Cards com Métricas Gerais -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center">
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
             <span class="text-xs text-slate-400 font-medium">Distância</span>
-            <p id="detDist" class="text-lg font-black text-slate-50 mt-0.5">-</p>
+            <p id="detDist" class="text-base sm:text-lg font-black text-slate-50 mt-0.5">-</p>
           </div>
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
             <span class="text-xs text-slate-400 font-medium">Duração</span>
-            <p id="detTime" class="text-lg font-black text-slate-50 mt-0.5">-</p>
+            <p id="detTime" class="text-base sm:text-lg font-black text-slate-50 mt-0.5">-</p>
           </div>
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
             <span class="text-xs text-slate-400 font-medium">Pace Médio</span>
-            <p id="detPace" class="text-lg font-black text-emerald-400 mt-0.5">-</p>
+            <p id="detPace" class="text-base sm:text-lg font-black text-emerald-400 mt-0.5">-</p>
           </div>
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
             <span class="text-xs text-slate-400 font-medium">FC Média / Máx</span>
-            <p id="detHr" class="text-lg font-black text-rose-400 mt-0.5">-</p>
+            <p id="detHr" class="text-base sm:text-lg font-black text-rose-400 mt-0.5">-</p>
           </div>
         </div>
 
-        <!-- Porcentagem em cada Zona Cardíaca (Z1 a Z5b) -->
-        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+        <!-- Distribuição por Zonas -->
+        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
           <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Distribuição de Tempo por Zonas</span>
           <div id="zonesBreakdown" class="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center text-xs"></div>
         </div>
 
-        <!-- Gráfico do Treino (FC com Eixo em Zonas 1 a 5b e Altimetria) -->
-        <div class="h-72 w-full relative pt-2">
+        <!-- Gráfico do Treino -->
+        <div class="h-64 sm:h-72 w-full relative pt-1">
           <canvas id="workoutDetailChart"></canvas>
         </div>
 
-        <!-- Tabela de Splits por Km -->
-        <div class="overflow-x-auto border-t border-slate-800 pt-3">
+        <!-- Splits -->
+        <div class="overflow-x-auto border-t border-slate-800 pt-2.5">
           <table class="w-full text-left text-xs border-collapse">
             <thead>
               <tr class="text-slate-400 border-b border-slate-800">
@@ -143,35 +143,44 @@
     </section>
 
     <!-- ABA 2: FITNESS & FADIGA -->
-    <section id="tab-pmc" class="hidden space-y-6">
-      <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow space-y-4">
-        <div>
-          <h2 class="text-lg font-bold text-slate-100">Performance Management Chart</h2>
-          <p class="text-xs text-slate-400">
-            <span class="text-sky-400 font-semibold">Fitness (CTL 42d)</span>: Condicionamento | 
-            <span class="text-rose-400 font-semibold">Fadiga (ATL 7d)</span>: Cansaço recente | 
-            <span class="text-amber-400 font-semibold">Forma (TSB)</span>: Prontidão para provas
-          </p>
+    <section id="tab-pmc" class="hidden space-y-4">
+      <div class="bg-slate-900 border border-slate-800 p-3 sm:p-5 rounded-2xl shadow space-y-3">
+        <div class="flex items-center justify-between gap-2 overflow-x-auto text-[11px] sm:text-xs whitespace-nowrap pb-1">
+          <h2 class="text-sm sm:text-base font-bold text-slate-100">Performance Management Chart</h2>
+          <div class="flex items-center gap-3 shrink-0">
+            <span class="inline-flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-sky-400 inline-block"></span>
+              <span class="text-slate-300">Fitness 42</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span>
+              <span class="text-slate-300">Fadiga 7</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
+              <span class="text-slate-300">Forma</span>
+            </span>
+          </div>
         </div>
-        <div class="h-96 w-full relative">
+        <div class="h-80 sm:h-96 w-full relative">
           <canvas id="pmcChart"></canvas>
         </div>
       </div>
     </section>
 
     <!-- ABA 3: VOLUME -->
-    <section id="tab-volume" class="hidden space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow space-y-3">
-          <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider">Volume Semanal (km)</h2>
-          <div class="h-64 w-full relative">
+    <section id="tab-volume" class="hidden space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-slate-900 border border-slate-800 p-3 sm:p-5 rounded-2xl shadow space-y-2.5">
+          <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider">Volume Semanal (km)</h2>
+          <div class="h-60 sm:h-64 w-full relative">
             <canvas id="weeklyVolumeChart"></canvas>
           </div>
         </div>
 
-        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow space-y-3">
-          <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider">Volume Mensal (km)</h2>
-          <div class="h-64 w-full relative">
+        <div class="bg-slate-900 border border-slate-800 p-3 sm:p-5 rounded-2xl shadow space-y-2.5">
+          <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider">Volume Mensal (km)</h2>
+          <div class="h-60 sm:h-64 w-full relative">
             <canvas id="monthlyVolumeChart"></canvas>
           </div>
         </div>
@@ -191,15 +200,15 @@
     let userHrRest = 50;
     let userHrMax = 185;
 
-    // Alternar Abas e Retorno à Lista de Treinos
+    // Alternar Abas e Retorno à Lista
     function switchTab(tabId) {
       ['tab-workouts', 'tab-pmc', 'tab-volume'].forEach(id => {
         document.getElementById(id).classList.add('hidden');
-        document.getElementById(`btn-${id}`).className = 'text-slate-400 hover:text-slate-200 pb-1';
+        document.getElementById(`btn-${id}`).className = 'text-slate-400 hover:text-slate-200 pb-0.5';
       });
 
       document.getElementById(tabId).classList.remove('hidden');
-      document.getElementById(`btn-${tabId}`).className = 'text-emerald-400 border-b-2 border-emerald-400 pb-1';
+      document.getElementById(`btn-${tabId}`).className = 'text-emerald-400 border-b-2 border-emerald-400 pb-0.5';
 
       if (tabId === 'tab-workouts') {
         document.getElementById('workoutDetailContainer').classList.add('hidden');
@@ -227,7 +236,6 @@
       return `${formatTime(spk)} /km`;
     }
 
-    // Limiares das Zonas Cardíacas (Z1 a Z5b por FC de Reserva)
     function getZoneBoundaries() {
       const hrr = userHrMax - userHrRest;
       return {
@@ -240,7 +248,6 @@
       };
     }
 
-    // Modal de Configurações
     function openSettingsModal() {
       document.getElementById('inputHrRest').value = userHrRest;
       document.getElementById('inputHrMax').value = userHrMax;
@@ -282,7 +289,6 @@
       }
     }
 
-    // Carregar Treinos do Supabase
     async function loadWorkouts() {
       await loadSettings();
 
@@ -316,21 +322,28 @@
         const dateStr = d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
         const km = (w.distance_meters / 1000).toFixed(2);
         const pace = formatPace(w.duration_seconds, w.distance_meters);
+        const trimpVal = Math.round(w.trimp_score || 0);
+
         return `
-          <button onclick="openWorkoutDetail('${w.id}')" class="w-full text-left p-4 rounded-xl bg-slate-950/70 hover:bg-slate-800 border border-slate-800/80 transition flex justify-between items-center group">
-            <div>
-              <p class="text-sm font-semibold text-slate-200 group-hover:text-emerald-400 transition">${dateStr}</p>
-              <p class="text-xs text-emerald-400 font-bold mt-1">${km} km <span class="text-slate-400 font-normal">| ${pace} | FC Méd: ${w.avg_heart_rate || '-'} bpm</span></p>
+          <button onclick="openWorkoutDetail('${w.id}')" class="w-full text-left p-3 sm:p-4 rounded-xl bg-slate-950/70 hover:bg-slate-800 border border-slate-800/80 transition flex items-center justify-between gap-2 group">
+            <div class="min-w-0 flex-1">
+              <p class="text-xs sm:text-sm font-semibold text-slate-200 group-hover:text-emerald-400 transition truncate">${dateStr}</p>
+              <div class="text-[11px] sm:text-xs text-emerald-400 font-bold mt-0.5 flex flex-wrap items-center gap-x-1.5">
+                <span class="whitespace-nowrap">${km} km</span>
+                <span class="text-slate-500">•</span>
+                <span class="text-slate-300 whitespace-nowrap">${pace}</span>
+                <span class="text-slate-500">•</span>
+                <span class="text-slate-300 whitespace-nowrap">${w.avg_heart_rate || '-'} bpm</span>
+              </div>
             </div>
-            <div class="text-right">
-              <span class="text-xs bg-slate-800 text-slate-300 px-3 py-1 rounded-full font-medium">TRIMP: ${Math.round(w.trimp_score || 0)}</span>
+            <div class="shrink-0 text-right">
+              <span class="text-[11px] sm:text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full font-medium whitespace-nowrap inline-block">TRIMP ${trimpVal}</span>
             </div>
           </button>
         `;
       }).join('');
     }
 
-    // Abrir Treino no Mesmo Espaço
     function openWorkoutDetail(id) {
       const w = allWorkouts.find(item => item.id === id);
       if (!w) return;
@@ -342,17 +355,15 @@
       const d = new Date(w.start_time);
       document.getElementById('workoutDate').textContent = d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
       document.getElementById('workoutSport').textContent = `Esporte: ${w.sport.toUpperCase()}`;
-      document.getElementById('workoutTrimp').textContent = `Carga TRIMP: ${Math.round(w.trimp_score || 0)}`;
+      document.getElementById('workoutTrimp').textContent = `TRIMP ${Math.round(w.trimp_score || 0)}`;
 
       document.getElementById('detDist').textContent = `${(w.distance_meters / 1000).toFixed(2)} km`;
       document.getElementById('detTime').textContent = formatTime(w.duration_seconds);
       document.getElementById('detPace').textContent = formatPace(w.duration_seconds, w.distance_meters);
       document.getElementById('detHr').textContent = `${w.avg_heart_rate || '-'} / ${w.max_heart_rate || '-'} bpm`;
 
-      // Calcular Porcentagens por Zona
       renderZonesBreakdown(w.trackpoints || []);
 
-      // Splits
       const splitsBody = document.getElementById('splitsTableBody');
       const laps = w.laps || [];
       splitsBody.innerHTML = laps.map((lap, idx) => `
@@ -365,7 +376,6 @@
         </tr>
       `).join('');
 
-      // Gráfico com Eixo de FC em Zonas
       renderDetailChart(w.trackpoints || []);
     }
 
@@ -489,7 +499,7 @@
       });
     }
 
-    // Performance Management Chart
+    // Performance Management Chart com Linhas Guia de TSB
     function renderPmcChart() {
       if (allWorkouts.length === 0) return;
 
@@ -530,14 +540,50 @@
       const ctx = document.getElementById('pmcChart').getContext('2d');
       if (pmcChartInstance) pmcChartInstance.destroy();
 
+      // Plugin personalizado para traçar as linhas de referência de TSB
+      const tsbReferenceLinesPlugin = {
+        id: 'tsbReferenceLines',
+        beforeDraw(chart) {
+          const { ctx, chartArea: { left, right, top, bottom }, scales: { y } } = chart;
+          if (!y) return;
+
+          const refLines = [
+            { val: 25, label: 'Transição (+25)', color: 'rgba(148, 163, 184, 0.35)' },
+            { val: 5, label: 'Forma / Prova (+5)', color: 'rgba(52, 211, 153, 0.45)' },
+            { val: -10, label: 'Treino Ótimo (-10)', color: 'rgba(251, 191, 36, 0.45)' },
+            { val: -30, label: 'Sobrecarga (-30)', color: 'rgba(244, 63, 94, 0.45)' }
+          ];
+
+          ctx.save();
+          ctx.setLineDash([4, 4]);
+          ctx.font = '10px sans-serif';
+
+          refLines.forEach(l => {
+            const yPixel = y.getPixelForValue(l.val);
+            if (yPixel >= top && yPixel <= bottom) {
+              ctx.strokeStyle = l.color;
+              ctx.beginPath();
+              ctx.moveTo(left, yPixel);
+              ctx.lineTo(right, yPixel);
+              ctx.stroke();
+
+              ctx.fillStyle = l.color;
+              ctx.fillText(l.label, right - 110, yPixel - 3);
+            }
+          });
+
+          ctx.restore();
+        }
+      };
+
       pmcChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
           labels: dates,
           datasets: [
-            { label: 'Fitness (CTL 42d)', data: ctlData, borderColor: '#38bdf8', borderWidth: 2, tension: 0.2, pointRadius: 0 },
-            { label: 'Fadiga (ATL 7d)', data: atlData, borderColor: '#f43f5e', borderWidth: 1.5, tension: 0.2, pointRadius: 0 },
-            { label: 'Forma (TSB)', data: tsbData, borderColor: '#fbbf24', backgroundColor: 'rgba(251, 191, 36, 0.1)', borderWidth: 1.5, tension: 0.2, fill: true, pointRadius: 0 }
+            { label: 'Fitness 42', data: ctlData, borderColor: '#38bdf8', borderWidth: 2, tension: 0.2, pointRadius: 0 },
+            { label: 'Fadiga 7', data: atlData, borderColor: '#f43f5e', borderWidth: 1.5, tension: 0.2, pointRadius: 0 },
+            { label: 'Forma', data: tsbData, borderColor: '#fbbf24', backgroundColor: 'rgba(251, 191, 36, 0.08)', borderWidth: 1.5, tension: 0.2, fill: true, pointRadius: 0 }
           ]
         },
         options: {
@@ -545,15 +591,16 @@
           maintainAspectRatio: false,
           interaction: { mode: 'index', intersect: false },
           scales: {
-            x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', maxTicksLimit: 12 } },
+            x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', maxTicksLimit: 10 } },
             y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }
           },
-          plugins: { legend: { labels: { color: '#cbd5e1' } } }
-        }
+          plugins: { legend: { display: false } }
+        },
+        plugins: [tsbReferenceLinesPlugin]
       });
     }
 
-    // Volume Semanal e Mensal
+    // Volume Semanal e Mensal (Iniciando a Semana na Segunda-Feira)
     function renderVolumeCharts() {
       if (allWorkouts.length === 0) return;
 
@@ -564,12 +611,17 @@
         const d = new Date(w.start_time);
         const km = w.distance_meters / 1000;
 
+        // Chave Mensal
         const mKey = `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
         monthlyKm[mKey] = (monthlyKm[mKey] || 0) + km;
 
-        const weekDate = new Date(d);
-        weekDate.setDate(d.getDate() - d.getDay());
-        const wKey = `${weekDate.getDate().toString().padStart(2, '0')}/${(weekDate.getMonth() + 1).toString().padStart(2, '0')}`;
+        // Chave Semanal com início na Segunda-Feira
+        const day = d.getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
+        const diffToMonday = d.getDate() - day + (day === 0 ? -6 : 1);
+        const mondayDate = new Date(d);
+        mondayDate.setDate(diffToMonday);
+
+        const wKey = `${mondayDate.getDate().toString().padStart(2, '0')}/${(mondayDate.getMonth() + 1).toString().padStart(2, '0')}`;
         weeklyKm[wKey] = (weeklyKm[wKey] || 0) + km;
       });
 
@@ -587,7 +639,8 @@
           scales: {
             x: { grid: { display: false }, ticks: { color: '#64748b' } },
             y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }
-          }
+          },
+          plugins: { legend: { display: false } }
         }
       });
 
@@ -605,7 +658,8 @@
           scales: {
             x: { grid: { display: false }, ticks: { color: '#64748b' } },
             y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }
-          }
+          },
+          plugins: { legend: { display: false } }
         }
       });
     }
