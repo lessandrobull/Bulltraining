@@ -7,18 +7,23 @@ export default async function handler(req, res) {
   const authHeader = 'Basic ' + Buffer.from('API_KEY:' + API_KEY).toString('base64');
 
   try {
-    // 1. Buscar os últimos 5 treinos no Intervals.icu
-    const listRes = await fetch(`https://intervals.icu/api/v1/athlete/${ATHLETE_ID}/activities?limit=5`, {
+    // 1. Buscar treinos dos últimos 15 dias no Intervals.icu
+    const d = new Date();
+    d.setDate(d.getDate() - 15);
+    const oldest = d.toISOString().split('T')[0];
+
+    const listRes = await fetch(`https://intervals.icu/api/v1/athlete/${ATHLETE_ID}/activities?oldest=${oldest}`, {
       headers: { Authorization: authHeader }
     });
 
     if (!listRes.ok) {
-      return res.status(listRes.status).json({ error: 'Erro ao conectar ao Intervals.icu' });
+      const errText = await listRes.text();
+      return res.status(listRes.status).json({ error: 'Erro no Intervals.icu', details: errText });
     }
 
     const activities = await listRes.json();
     if (!Array.isArray(activities) || activities.length === 0) {
-      return res.status(200).json({ message: 'Nenhum treino novo', synced: 0 });
+      return res.status(200).json({ message: 'Nenhum treino retornado pelo Intervals.icu nos últimos 15 dias.', synced: 0 });
     }
 
     // 2. Buscar treinos já gravados no Supabase
@@ -90,8 +95,8 @@ export default async function handler(req, res) {
       const hrRatio = avgHr > hrRest ? (avgHr - hrRest) / (hrMax - hrRest) : 0;
       const trimp = durationMin * hrRatio * 0.64 * Math.exp(1.92 * hrRatio);
 
-      // Inserir no Supabase
-      await fetch(`${SUPABASE_URL}/rest/v1/workouts`, {
+      // Inserir no Supabase com regra de conflito explícita
+      const saveRes = await fetch(`${SUPABASE_URL}/rest/v1/workouts?on_conflict=start_time`, {
         method: 'POST',
         headers: {
           apikey: SUPABASE_KEY,
@@ -112,10 +117,15 @@ export default async function handler(req, res) {
         })
       });
 
-      syncedCount++;
+      if (saveRes.ok) {
+        syncedCount++;
+      } else {
+        const supaErr = await saveRes.text();
+        console.error('Erro ao gravar no Supabase:', supaErr);
+      }
     }
 
-    return res.status(200).json({ success: true, synced: syncedCount });
+    return res.status(200).json({ success: true, synced: syncedCount, totalEncontrados: activities.length });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
