@@ -26,11 +26,6 @@
       </div>
 
       <div class="flex items-center gap-1.5 sm:gap-2">
-        <label class="cursor-pointer bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs sm:text-sm font-semibold px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl transition duration-200 shadow inline-flex items-center gap-1.5">
-          <span>+ Subir TCX</span>
-          <input type="file" id="tcxInput" accept=".tcx" multiple class="hidden">
-        </label>
-        
         <button onclick="openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-1.5 sm:p-2 rounded-xl border border-slate-700 transition shadow" title="Configurações de Frequência Cardíaca">
           <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
@@ -332,7 +327,7 @@
     function renderWorkoutList() {
       const listEl = document.getElementById('workoutList');
       if (allWorkouts.length === 0) {
-        listEl.innerHTML = `<p class="text-slate-500 text-sm p-2">Nenhum treino salvo ainda. Carregue seu arquivo .tcx no botão acima.</p>`;
+        listEl.innerHTML = `<p class="text-slate-500 text-sm p-2">Nenhum treino encontrado. Seus próximos treinos no Garmin aparecerão aqui automaticamente.</p>`;
         return;
       }
 
@@ -675,86 +670,6 @@
         }
       });
     }
-
-    document.getElementById('tcxInput').addEventListener('change', async function(e) {
-      const files = Array.from(e.target.files);
-      if (files.length === 0) return;
-
-      showAlert(`Processando ${files.length} arquivo(s)...`);
-
-      for (const file of files) {
-        const text = await file.text();
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(text, 'text/xml');
-
-        const activity = xml.getElementsByTagName('Activity')[0];
-        if (!activity) continue;
-
-        const startTime = activity.getElementsByTagName('Id')[0]?.textContent || new Date().toISOString();
-        const sport = activity.getAttribute('Sport') || 'running';
-
-        let totalMeters = 0;
-        let totalSecs = 0;
-        let hrWeightedSum = 0;
-        let maxHr = 0;
-        const lapsData = [];
-
-        const laps = xml.getElementsByTagName('Lap');
-        for (let i = 0; i < laps.length; i++) {
-          const lap = laps[i];
-          const secs = parseFloat(lap.getElementsByTagName('TotalTimeSeconds')[0]?.textContent || 0);
-          const meters = parseFloat(lap.getElementsByTagName('DistanceMeters')[0]?.textContent || 0);
-          const avgHrVal = parseInt(lap.getElementsByTagName('AverageHeartRateBpm')[0]?.getElementsByTagName('Value')[0]?.textContent || 0);
-          const maxHrVal = parseInt(lap.getElementsByTagName('MaximumHeartRateBpm')[0]?.getElementsByTagName('Value')[0]?.textContent || 0);
-
-          totalMeters += meters;
-          totalSecs += secs;
-          if (avgHrVal > 0) hrWeightedSum += avgHrVal * secs;
-          if (maxHrVal > maxHr) maxHr = maxHrVal;
-
-          lapsData.push({ lap: i + 1, seconds: secs, meters: meters, avgHr: avgHrVal, maxHr: maxHrVal });
-        }
-
-        const avgHrTotal = totalSecs > 0 ? Math.round(hrWeightedSum / totalSecs) : 0;
-
-        const tps = xml.getElementsByTagName('Trackpoint');
-        const sampledPoints = [];
-        for (let j = 0; j < tps.length; j += 3) {
-          const pt = tps[j];
-          const dist = parseFloat(pt.getElementsByTagName('DistanceMeters')[0]?.textContent || 0);
-          const hr = parseInt(pt.getElementsByTagName('HeartRateBpm')[0]?.getElementsByTagName('Value')[0]?.textContent || 0);
-          const alt = parseFloat(pt.getElementsByTagName('AltitudeMeters')[0]?.textContent || 0);
-          sampledPoints.push({ dist, hr, alt });
-        }
-
-        const hrRatio = avgHrTotal > userHrRest ? (avgHrTotal - userHrRest) / (userHrMax - userHrRest) : 0;
-        const durationMin = totalSecs / 60;
-        const trimp = durationMin * hrRatio * 0.64 * Math.exp(1.92 * hrRatio);
-
-        const { error } = await supabaseClient
-          .from('workouts')
-          .upsert({
-            start_time: startTime,
-            sport: sport,
-            distance_meters: totalMeters,
-            duration_seconds: totalSecs,
-            avg_heart_rate: avgHrTotal,
-            max_heart_rate: maxHr,
-            trimp_score: trimp,
-            laps: lapsData,
-            trackpoints: sampledPoints
-          }, { onConflict: 'start_time' });
-
-        if (error) {
-          console.error(error);
-          showAlert(`Erro ao salvar treino de ${startTime}: ${error.message}`, true);
-        }
-      }
-
-      showAlert('Treino(s) salvo(s) com sucesso!');
-      await loadWorkouts();
-      e.target.value = '';
-    });
 
     loadWorkouts();
   </script>
