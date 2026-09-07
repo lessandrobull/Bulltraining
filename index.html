@@ -85,12 +85,12 @@
 
       <!-- Detalhes do Treino -->
       <div id="workoutDetailContainer" class="bg-slate-900 border border-slate-800 p-3 sm:p-5 rounded-2xl shadow space-y-4 hidden">
-        <div class="flex justify-between items-start border-b border-slate-800 pb-2.5">
-          <div>
-            <h3 id="workoutDate" class="text-base sm:text-lg font-bold text-slate-100">-</h3>
-            <span id="workoutSport" class="text-xs text-slate-400">Detalhes da atividade</span>
+        <div class="border-b border-slate-800 pb-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <h3 id="workoutDate" class="text-xs sm:text-base font-bold text-slate-100 truncate">-</h3>
+            <span id="workoutTrimp" class="text-[11px] sm:text-xs font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-slate-800 text-slate-300 whitespace-nowrap shrink-0">-</span>
           </div>
-          <span id="workoutTrimp" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 whitespace-nowrap">-</span>
+          <span id="workoutSport" class="text-[11px] sm:text-xs text-slate-400 block mt-0.5">Detalhes da atividade</span>
         </div>
 
         <!-- Cards com Métricas Gerais -->
@@ -145,9 +145,9 @@
     <!-- ABA 2: FITNESS & FADIGA -->
     <section id="tab-pmc" class="hidden space-y-4">
       <div class="bg-slate-900 border border-slate-800 p-3 sm:p-5 rounded-2xl shadow space-y-3">
-        <div class="flex items-center justify-between gap-2 overflow-x-auto text-[11px] sm:text-xs whitespace-nowrap pb-1">
+        <div>
           <h2 class="text-sm sm:text-base font-bold text-slate-100">Performance Management Chart</h2>
-          <div class="flex items-center gap-3 shrink-0">
+          <div class="flex items-center gap-3 text-[11px] sm:text-xs whitespace-nowrap mt-1.5">
             <span class="inline-flex items-center gap-1">
               <span class="w-2 h-2 rounded-full bg-sky-400 inline-block"></span>
               <span class="text-slate-300">Fitness 42</span>
@@ -200,7 +200,6 @@
     let userHrRest = 50;
     let userHrMax = 185;
 
-    // Alternar Abas e Retorno à Lista
     function switchTab(tabId) {
       ['tab-workouts', 'tab-pmc', 'tab-volume'].forEach(id => {
         document.getElementById(id).classList.add('hidden');
@@ -309,7 +308,6 @@
       renderVolumeCharts();
     }
 
-    // Renderizar Lista de Treinos
     function renderWorkoutList() {
       const listEl = document.getElementById('workoutList');
       if (allWorkouts.length === 0) {
@@ -353,7 +351,7 @@
       document.getElementById('workoutDetailContainer').classList.remove('hidden');
 
       const d = new Date(w.start_time);
-      document.getElementById('workoutDate').textContent = d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      document.getElementById('workoutDate').textContent = d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
       document.getElementById('workoutSport').textContent = `Esporte: ${w.sport.toUpperCase()}`;
       document.getElementById('workoutTrimp').textContent = `TRIMP ${Math.round(w.trimp_score || 0)}`;
 
@@ -499,7 +497,6 @@
       });
     }
 
-    // Performance Management Chart com Linhas Guia de TSB
     function renderPmcChart() {
       if (allWorkouts.length === 0) return;
 
@@ -540,18 +537,18 @@
       const ctx = document.getElementById('pmcChart').getContext('2d');
       if (pmcChartInstance) pmcChartInstance.destroy();
 
-      // Plugin personalizado para traçar as linhas de referência de TSB
       const tsbReferenceLinesPlugin = {
         id: 'tsbReferenceLines',
         beforeDraw(chart) {
           const { ctx, chartArea: { left, right, top, bottom }, scales: { y } } = chart;
           if (!y) return;
 
+          const amberColor = 'rgba(251, 191, 36, 0.45)';
           const refLines = [
-            { val: 25, label: 'Transição (+25)', color: 'rgba(148, 163, 184, 0.35)' },
-            { val: 5, label: 'Forma / Prova (+5)', color: 'rgba(52, 211, 153, 0.45)' },
-            { val: -10, label: 'Treino Ótimo (-10)', color: 'rgba(251, 191, 36, 0.45)' },
-            { val: -30, label: 'Sobrecarga (-30)', color: 'rgba(244, 63, 94, 0.45)' }
+            { val: 25, label: 'Polimento (+25)' },
+            { val: 5, label: 'Forma / Prova (+5)' },
+            { val: -10, label: 'Treino Ótimo (-10)' },
+            { val: -30, label: 'Sobrecarga (-30)' }
           ];
 
           ctx.save();
@@ -561,13 +558,13 @@
           refLines.forEach(l => {
             const yPixel = y.getPixelForValue(l.val);
             if (yPixel >= top && yPixel <= bottom) {
-              ctx.strokeStyle = l.color;
+              ctx.strokeStyle = amberColor;
               ctx.beginPath();
               ctx.moveTo(left, yPixel);
               ctx.lineTo(right, yPixel);
               ctx.stroke();
 
-              ctx.fillStyle = l.color;
+              ctx.fillStyle = amberColor;
               ctx.fillText(l.label, right - 110, yPixel - 3);
             }
           });
@@ -600,7 +597,6 @@
       });
     }
 
-    // Volume Semanal e Mensal (Iniciando a Semana na Segunda-Feira)
     function renderVolumeCharts() {
       if (allWorkouts.length === 0) return;
 
@@ -611,12 +607,10 @@
         const d = new Date(w.start_time);
         const km = w.distance_meters / 1000;
 
-        // Chave Mensal
         const mKey = `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
         monthlyKm[mKey] = (monthlyKm[mKey] || 0) + km;
 
-        // Chave Semanal com início na Segunda-Feira
-        const day = d.getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
+        const day = d.getDay();
         const diffToMonday = d.getDate() - day + (day === 0 ? -6 : 1);
         const mondayDate = new Date(d);
         mondayDate.setDate(diffToMonday);
@@ -664,7 +658,6 @@
       });
     }
 
-    // Leitura e Upload de TCX
     document.getElementById('tcxInput').addEventListener('change', async function(e) {
       const files = Array.from(e.target.files);
       if (files.length === 0) return;
