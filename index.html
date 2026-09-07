@@ -1,762 +1,127 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel de Treinos</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans pb-10">
+export default async function handler(req, res) {
+  // Resposta rápida para checagens do Intervals.icu
+  if (req.method === 'GET') {
+    return res.status(200).json({ status: 'Webhook ativo e pronto' });
+  }
 
-  <!-- Configuração do Supabase -->
-  <script>
-    const SUPABASE_URL = "https://xttzilpuuqjbztjkeadd.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_uexabKupvCYRAAPqRiETSQ_I01UsSZI";
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  </script>
+  const API_KEY = '3pcp8m39g3wupqh688l1zcvtf';
+  const ATHLETE_ID = 'i704231';
+  const SUPABASE_URL = 'https://xttzilpuuqjbztjkeadd.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_uexabKupvCYRAAPqRiETSQ_I01UsSZI';
 
-  <!-- Cabeçalho Compacto -->
-  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 px-3 py-2 sm:px-6 sm:py-2.5 shadow-md">
-    <div class="max-w-6xl mx-auto flex justify-between items-center gap-2">
-      <div>
-        <h1 class="text-lg sm:text-xl font-bold tracking-tight text-emerald-400">Hub de Treinos</h1>
-        <p class="text-[11px] sm:text-xs text-slate-400">Gestão de Carga & Evolução</p>
-      </div>
+  const authHeader = 'Basic ' + Buffer.from('API_KEY:' + API_KEY).toString('base64');
 
-      <div class="flex items-center gap-1.5 sm:gap-2">
-        <label class="cursor-pointer bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs sm:text-sm font-semibold px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl transition duration-200 shadow inline-flex items-center gap-1.5">
-          <span>+ Subir TCX</span>
-          <input type="file" id="tcxInput" accept=".tcx" multiple class="hidden">
-        </label>
-        
-        <button onclick="openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-1.5 sm:p-2 rounded-xl border border-slate-700 transition shadow" title="Configurações de Frequência Cardíaca">
-          <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-          </svg>
-        </button>
-      </div>
-    </div>
+  try {
+    // Identificar o ID da atividade enviada no evento
+    const body = req.body || {};
+    const activityId = body.activity_id || body.activityId || body.id || req.query.activity_id;
 
-    <!-- Navegação por Abas -->
-    <div class="max-w-6xl mx-auto flex gap-6 mt-1.5 sm:mt-2 border-t border-slate-800/60 pt-1.5 text-xs sm:text-sm font-medium">
-      <button onclick="switchTab('tab-workouts')" id="btn-tab-workouts" class="text-emerald-400 border-b-2 border-emerald-400 pb-0.5">Treinos</button>
-      <button onclick="switchTab('tab-pmc')" id="btn-tab-pmc" class="text-slate-400 hover:text-slate-200 pb-0.5">Fitness & Fadiga</button>
-      <button onclick="switchTab('tab-volume')" id="btn-tab-volume" class="text-slate-400 hover:text-slate-200 pb-0.5">Volume</button>
-    </div>
-  </header>
-
-  <!-- Modal de Configuração de FC -->
-  <div id="settingsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl">
-      <h3 class="text-sm font-bold text-slate-100">Zonas e Frequência Cardíaca</h3>
-      <div>
-        <label class="text-xs text-slate-400 block mb-1">FC de Repouso (bpm)</label>
-        <input type="number" id="inputHrRest" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
-      </div>
-      <div>
-        <label class="text-xs text-slate-400 block mb-1">FC Máxima (bpm)</label>
-        <input type="number" id="inputHrMax" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button onclick="closeSettingsModal()" class="px-4 py-2 text-xs rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300">Cancelar</button>
-        <button onclick="saveSettings()" class="px-4 py-2 text-xs font-semibold rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950">Salvar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Conteúdo Principal -->
-  <main class="max-w-6xl mx-auto px-2 sm:px-6 py-2.5 sm:py-3.5 space-y-3 sm:space-y-4">
-
-    <div id="statusAlert" class="hidden p-3 rounded-xl text-sm border"></div>
-
-    <!-- ABA 1: TREINOS -->
-    <section id="tab-workouts" class="space-y-4">
-      
-      <!-- Lista de Treinos -->
-      <div id="workoutListContainer" class="bg-slate-900 border border-slate-800 p-3 sm:p-5 rounded-2xl shadow">
-        <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider mb-3">Histórico de Atividades</h2>
-        <div id="workoutList" class="space-y-2">
-          <p class="text-slate-500 text-sm">Carregando treinos...</p>
-        </div>
-      </div>
-
-      <!-- Detalhes do Treino -->
-      <div id="workoutDetailContainer" class="bg-slate-900 border border-slate-800 p-3 sm:p-5 rounded-2xl shadow space-y-4 hidden">
-        <div class="border-b border-slate-800 pb-2.5">
-          <div class="flex items-center justify-between gap-2">
-            <h3 id="workoutDate" class="text-xs sm:text-base font-bold text-slate-100 truncate">-</h3>
-            <span id="workoutTrimp" class="text-[11px] sm:text-xs font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-slate-800 text-slate-300 whitespace-nowrap shrink-0">-</span>
-          </div>
-        </div>
-
-        <!-- Cards com Métricas Gerais -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center">
-          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-            <span class="text-xs text-slate-400 font-medium">Distância</span>
-            <p id="detDist" class="text-base sm:text-lg font-black text-slate-50 mt-0.5">-</p>
-          </div>
-          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-            <span class="text-xs text-slate-400 font-medium">Duração</span>
-            <p id="detTime" class="text-base sm:text-lg font-black text-slate-50 mt-0.5">-</p>
-          </div>
-          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-            <span class="text-xs text-slate-400 font-medium">Pace Médio</span>
-            <p id="detPace" class="text-base sm:text-lg font-black text-emerald-400 mt-0.5">-</p>
-          </div>
-          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-            <span class="text-xs text-slate-400 font-medium">FC Média / Máx</span>
-            <p id="detHr" class="text-base sm:text-lg font-black text-rose-400 mt-0.5">-</p>
-          </div>
-        </div>
-
-        <!-- Distribuição por Zonas Centralizada -->
-        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
-          <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider block text-center">Distribuição de Tempo por Zonas</span>
-          <div id="zonesBreakdown" class="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center text-xs"></div>
-        </div>
-
-        <!-- Gráfico do Treino -->
-        <div class="h-64 sm:h-72 w-full relative pt-1">
-          <canvas id="workoutDetailChart"></canvas>
-        </div>
-
-        <!-- Splits -->
-        <div class="overflow-x-auto border-t border-slate-800 pt-2.5">
-          <table class="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr class="text-slate-400 border-b border-slate-800">
-                <th class="py-2">Km</th>
-                <th class="py-2">Tempo</th>
-                <th class="py-2">Pace</th>
-                <th class="py-2">FC Média</th>
-                <th class="py-2">FC Máx</th>
-              </tr>
-            </thead>
-            <tbody id="splitsTableBody" class="divide-y divide-slate-800/60"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- ABA 2: FITNESS & FADIGA -->
-    <section id="tab-pmc" class="hidden space-y-4">
-      <div class="bg-slate-900 border border-slate-800 p-3 sm:p-5 rounded-2xl shadow space-y-3">
-        <div>
-          <h2 class="text-sm sm:text-base font-bold text-slate-100">Gestão de Desempenho</h2>
-          <div class="flex items-center gap-3 text-[11px] sm:text-xs whitespace-nowrap mt-1.5">
-            <span class="inline-flex items-center gap-1">
-              <span class="w-2 h-2 rounded-full bg-sky-400 inline-block"></span>
-              <span class="text-slate-300">Fitness 42</span>
-            </span>
-            <span class="inline-flex items-center gap-1">
-              <span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span>
-              <span class="text-slate-300">Fadiga 7</span>
-            </span>
-            <span class="inline-flex items-center gap-1">
-              <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
-              <span class="text-slate-300">Forma</span>
-            </span>
-          </div>
-        </div>
-        <div class="h-80 sm:h-96 w-full relative">
-          <canvas id="pmcChart"></canvas>
-        </div>
-      </div>
-    </section>
-
-    <!-- ABA 3: VOLUME -->
-    <section id="tab-volume" class="hidden space-y-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bg-slate-900 border border-slate-800 p-3 sm:p-5 rounded-2xl shadow space-y-2.5">
-          <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider">Volume Semanal (km)</h2>
-          <div class="h-60 sm:h-64 w-full relative">
-            <canvas id="weeklyVolumeChart"></canvas>
-          </div>
-        </div>
-
-        <div class="bg-slate-900 border border-slate-800 p-3 sm:p-5 rounded-2xl shadow space-y-2.5">
-          <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider">Volume Mensal (km)</h2>
-          <div class="h-60 sm:h-64 w-full relative">
-            <canvas id="monthlyVolumeChart"></canvas>
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <script>
-    let allWorkouts = [];
-    let currentWorkout = null;
-    let detailChartInstance = null;
-    let pmcChartInstance = null;
-    let weeklyChartInstance = null;
-    let monthlyChartInstance = null;
-
-    let userHrRest = 50;
-    let userHrMax = 185;
-
-    function switchTab(tabId) {
-      ['tab-workouts', 'tab-pmc', 'tab-volume'].forEach(id => {
-        document.getElementById(id).classList.add('hidden');
-        document.getElementById(`btn-${id}`).className = 'text-slate-400 hover:text-slate-200 pb-0.5';
-      });
-
-      document.getElementById(tabId).classList.remove('hidden');
-      document.getElementById(`btn-${tabId}`).className = 'text-emerald-400 border-b-2 border-emerald-400 pb-0.5';
-
-      if (tabId === 'tab-workouts') {
-        document.getElementById('workoutDetailContainer').classList.add('hidden');
-        document.getElementById('workoutListContainer').classList.remove('hidden');
-      }
+    if (!activityId) {
+      return res.status(200).json({ message: 'Nenhum activity_id informado no evento.' });
     }
 
-    function showAlert(msg, isError = false) {
-      const alert = document.getElementById('statusAlert');
-      alert.textContent = msg;
-      alert.className = `p-3 rounded-xl text-sm border ${isError ? 'bg-rose-950/40 text-rose-300 border-rose-800' : 'bg-emerald-950/40 text-emerald-300 border-emerald-800'}`;
-      alert.classList.remove('hidden');
-      setTimeout(() => alert.classList.add('hidden'), 5000);
-    }
-
-    function formatTime(secs) {
-      const m = Math.floor(secs / 60);
-      const s = Math.floor(secs % 60);
-      return `${m}:${s.toString().padStart(2, '0')}`;
-    }
-
-    function formatPace(secs, meters) {
-      if (!meters || meters === 0) return "-";
-      const spk = secs / (meters / 1000);
-      return `${formatTime(spk)} /km`;
-    }
-
-    function translateSport(sport) {
-      const s = (sport || '').toLowerCase();
-      if (s === 'running' || s === 'run') return 'Corrida';
-      if (s === 'biking' || s === 'cycling' || s === 'ride') return 'Ciclismo';
-      if (s === 'swimming') return 'Natação';
-      if (s === 'walking') return 'Caminhada';
-      return sport ? sport.charAt(0).toUpperCase() + sport.slice(1) : 'Treino';
-    }
-
-    function formatWorkoutHeader(w) {
-      const d = new Date(w.start_time);
-      const days = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
-      const dayName = days[d.getDay()];
-      const day = d.getDate().toString().padStart(2, '0');
-      const month = (d.getMonth() + 1).toString().padStart(2, '0');
-      const year = d.getFullYear();
-      const hours = d.getHours().toString().padStart(2, '0');
-      const minutes = d.getMinutes().toString().padStart(2, '0');
-      const sportName = translateSport(w.sport);
-      return `${sportName}, ${dayName}, ${day}/${month}/${year}, ${hours}:${minutes}`;
-    }
-
-    function getZoneBoundaries() {
-      const hrr = userHrMax - userHrRest;
-      return {
-        z1Max: Math.round(userHrRest + 0.60 * hrr),
-        z2Max: Math.round(userHrRest + 0.70 * hrr),
-        z3Max: Math.round(userHrRest + 0.80 * hrr),
-        z4Max: Math.round(userHrRest + 0.90 * hrr),
-        z5aMax: Math.round(userHrRest + 0.95 * hrr),
-        z5bMax: userHrMax
-      };
-    }
-
-    function openSettingsModal() {
-      document.getElementById('inputHrRest').value = userHrRest;
-      document.getElementById('inputHrMax').value = userHrMax;
-      document.getElementById('settingsModal').classList.remove('hidden');
-    }
-
-    function closeSettingsModal() {
-      document.getElementById('settingsModal').classList.add('hidden');
-    }
-
-    async function saveSettings() {
-      const r = parseInt(document.getElementById('inputHrRest').value);
-      const m = parseInt(document.getElementById('inputHrMax').value);
-      if (!r || !m || r >= m) {
-        alert('Insira valores válidos (FC Máxima deve ser superior à FC de Repouso).');
-        return;
-      }
-
-      userHrRest = r;
-      userHrMax = m;
-
-      await supabaseClient
-        .from('user_settings')
-        .upsert({ id: 1, hr_rest: r, hr_max: m });
-
-      closeSettingsModal();
-      showAlert('Configurações salvas!');
-
-      if (currentWorkout) {
-        openWorkoutDetail(currentWorkout.id);
-      }
-    }
-
-    async function loadSettings() {
-      const { data } = await supabaseClient.from('user_settings').select('*').eq('id', 1).single();
-      if (data) {
-        userHrRest = data.hr_rest || 50;
-        userHrMax = data.hr_max || 185;
-      }
-    }
-
-    async function loadWorkouts() {
-      await loadSettings();
-
-      const { data, error } = await supabaseClient
-        .from('workouts')
-        .select('*')
-        .order('start_time', { ascending: false });
-
-      if (error) {
-        console.error(error);
-        showAlert('Erro ao carregar dados do Supabase.', true);
-        return;
-      }
-
-      allWorkouts = data || [];
-      renderWorkoutList();
-      renderPmcChart();
-      renderVolumeCharts();
-    }
-
-    function renderWorkoutList() {
-      const listEl = document.getElementById('workoutList');
-      if (allWorkouts.length === 0) {
-        listEl.innerHTML = `<p class="text-slate-500 text-sm p-2">Nenhum treino salvo ainda. Carregue seu arquivo .tcx no botão acima.</p>`;
-        return;
-      }
-
-      listEl.innerHTML = allWorkouts.map(w => {
-        const titleStr = formatWorkoutHeader(w);
-        const km = (w.distance_meters / 1000).toFixed(2);
-        const pace = formatPace(w.duration_seconds, w.distance_meters);
-        const trimpVal = Math.round(w.trimp_score || 0);
-
-        return `
-          <button onclick="openWorkoutDetail('${w.id}')" class="w-full text-left p-3 sm:p-4 rounded-xl bg-slate-950/70 hover:bg-slate-800 border border-slate-800/80 transition flex items-center justify-between gap-2 group">
-            <div class="min-w-0 flex-1">
-              <p class="text-xs sm:text-sm font-semibold text-slate-200 group-hover:text-emerald-400 transition truncate">${titleStr}</p>
-              <div class="text-[11px] sm:text-xs text-emerald-400 font-bold mt-0.5 flex flex-wrap items-center gap-x-1.5">
-                <span class="whitespace-nowrap">${km} km</span>
-                <span class="text-slate-500">•</span>
-                <span class="text-slate-300 whitespace-nowrap">${pace}</span>
-                <span class="text-slate-500">•</span>
-                <span class="text-slate-300 whitespace-nowrap">${w.avg_heart_rate || '-'} bpm</span>
-              </div>
-            </div>
-            <div class="shrink-0 text-right">
-              <span class="text-[11px] sm:text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full font-medium whitespace-nowrap inline-block">TRIMP ${trimpVal}</span>
-            </div>
-          </button>
-        `;
-      }).join('');
-    }
-
-    function openWorkoutDetail(id) {
-      const w = allWorkouts.find(item => item.id === id);
-      if (!w) return;
-      currentWorkout = w;
-
-      document.getElementById('workoutListContainer').classList.add('hidden');
-      document.getElementById('workoutDetailContainer').classList.remove('hidden');
-
-      document.getElementById('workoutDate').textContent = formatWorkoutHeader(w);
-      document.getElementById('workoutTrimp').textContent = `TRIMP ${Math.round(w.trimp_score || 0)}`;
-
-      document.getElementById('detDist').textContent = `${(w.distance_meters / 1000).toFixed(2)} km`;
-      document.getElementById('detTime').textContent = formatTime(w.duration_seconds);
-      document.getElementById('detPace').textContent = formatPace(w.duration_seconds, w.distance_meters);
-      document.getElementById('detHr').textContent = `${w.avg_heart_rate || '-'} / ${w.max_heart_rate || '-'} bpm`;
-
-      renderZonesBreakdown(w.trackpoints || []);
-
-      const splitsBody = document.getElementById('splitsTableBody');
-      const laps = w.laps || [];
-      splitsBody.innerHTML = laps.map((lap, idx) => `
-        <tr class="hover:bg-slate-800/40 text-slate-300">
-          <td class="py-2 font-semibold text-slate-200">${idx + 1}</td>
-          <td class="py-2">${formatTime(lap.seconds)}</td>
-          <td class="py-2 font-bold text-emerald-400">${formatPace(lap.seconds, lap.meters)}</td>
-          <td class="py-2">${lap.avgHr || '-'} bpm</td>
-          <td class="py-2">${lap.maxHr || '-'} bpm</td>
-        </tr>
-      `).join('');
-
-      renderDetailChart(w.trackpoints || []);
-    }
-
-    function renderZonesBreakdown(trackpoints) {
-      const bounds = getZoneBoundaries();
-      let counts = { z1: 0, z2: 0, z3: 0, z4: 0, z5a: 0, z5b: 0 };
-      let total = 0;
-
-      trackpoints.forEach(tp => {
-        if (!tp.hr) return;
-        total++;
-        if (tp.hr < bounds.z1Max) counts.z1++;
-        else if (tp.hr < bounds.z2Max) counts.z2++;
-        else if (tp.hr < bounds.z3Max) counts.z3++;
-        else if (tp.hr < bounds.z4Max) counts.z4++;
-        else if (tp.hr < bounds.z5aMax) counts.z5a++;
-        else counts.z5b++;
-      });
-
-      const calc = (val) => total > 0 ? ((val / total) * 100).toFixed(0) : 0;
-
-      const container = document.getElementById('zonesBreakdown');
-      container.innerHTML = `
-        <div class="bg-slate-900 border border-slate-800/80 p-2 rounded-lg">
-          <span class="text-slate-400 block text-[10px]">Z1 (&lt;${bounds.z1Max})</span>
-          <p class="font-bold text-sky-400 text-sm mt-0.5">${calc(counts.z1)}%</p>
-        </div>
-        <div class="bg-slate-900 border border-slate-800/80 p-2 rounded-lg">
-          <span class="text-slate-400 block text-[10px]">Z2 (${bounds.z1Max}-${bounds.z2Max})</span>
-          <p class="font-bold text-emerald-400 text-sm mt-0.5">${calc(counts.z2)}%</p>
-        </div>
-        <div class="bg-slate-900 border border-slate-800/80 p-2 rounded-lg">
-          <span class="text-slate-400 block text-[10px]">Z3 (${bounds.z2Max}-${bounds.z3Max})</span>
-          <p class="font-bold text-yellow-400 text-sm mt-0.5">${calc(counts.z3)}%</p>
-        </div>
-        <div class="bg-slate-900 border border-slate-800/80 p-2 rounded-lg">
-          <span class="text-slate-400 block text-[10px]">Z4 (${bounds.z3Max}-${bounds.z4Max})</span>
-          <p class="font-bold text-amber-500 text-sm mt-0.5">${calc(counts.z4)}%</p>
-        </div>
-        <div class="bg-slate-900 border border-slate-800/80 p-2 rounded-lg">
-          <span class="text-slate-400 block text-[10px]">Z5a (${bounds.z4Max}-${bounds.z5aMax})</span>
-          <p class="font-bold text-rose-400 text-sm mt-0.5">${calc(counts.z5a)}%</p>
-        </div>
-        <div class="bg-slate-900 border border-slate-800/80 p-2 rounded-lg">
-          <span class="text-slate-400 block text-[10px]">Z5b (&ge;${bounds.z5aMax})</span>
-          <p class="font-bold text-purple-400 text-sm mt-0.5">${calc(counts.z5b)}%</p>
-        </div>
-      `;
-    }
-
-    function renderDetailChart(trackpoints) {
-      const ctx = document.getElementById('workoutDetailChart').getContext('2d');
-      if (detailChartInstance) detailChartInstance.destroy();
-
-      const labels = trackpoints.map(tp => `${(tp.dist / 1000).toFixed(2)}k`);
-      const hrData = trackpoints.map(tp => tp.hr);
-      const altData = trackpoints.map(tp => tp.alt);
-
-      const bounds = getZoneBoundaries();
-      const zoneTicks = [bounds.z1Max, bounds.z2Max, bounds.z3Max, bounds.z4Max, bounds.z5aMax, bounds.z5bMax];
-
-      detailChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: 'FC (Zonas)',
-              data: hrData,
-              borderColor: '#f43f5e',
-              yAxisID: 'yHr',
-              borderWidth: 1.8,
-              tension: 0.2,
-              pointRadius: 0
-            },
-            {
-              label: 'Altimetria (m)',
-              data: altData,
-              borderColor: '#38bdf8',
-              backgroundColor: 'rgba(56, 189, 248, 0.08)',
-              yAxisID: 'yAlt',
-              borderWidth: 1.5,
-              tension: 0.2,
-              fill: true,
-              pointRadius: 0
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: { mode: 'index', intersect: false },
-          scales: {
-            x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', maxTicksLimit: 8 } },
-            yHr: {
-              type: 'linear',
-              position: 'left',
-              min: bounds.z1Max - 15,
-              max: bounds.z5bMax + 2,
-              afterBuildTicks: (scale) => {
-                scale.ticks = zoneTicks.map(v => ({ value: v }));
-              },
-              ticks: {
-                color: '#f43f5e',
-                callback: function(value) {
-                  if (value === bounds.z1Max) return `Z1 (${bounds.z1Max})`;
-                  if (value === bounds.z2Max) return `Z2 (${bounds.z2Max})`;
-                  if (value === bounds.z3Max) return `Z3 (${bounds.z3Max})`;
-                  if (value === bounds.z4Max) return `Z4 (${bounds.z4Max})`;
-                  if (value === bounds.z5aMax) return `Z5a (${bounds.z5aMax})`;
-                  if (value === bounds.z5bMax) return `Z5b (${bounds.z5bMax})`;
-                  return value;
-                }
-              },
-              grid: { color: '#334155' }
-            },
-            yAlt: { type: 'linear', position: 'right', grid: { display: false }, ticks: { color: '#38bdf8' } }
-          },
-          plugins: { legend: { labels: { color: '#94a3b8', boxWidth: 12 } } }
-        }
-      });
-    }
-
-    function renderPmcChart() {
-      if (allWorkouts.length === 0) return;
-
-      const sorted = [...allWorkouts].sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
-      const firstDate = new Date(sorted[0].start_time);
-      firstDate.setHours(0, 0, 0, 0);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const dailyTrimp = {};
-      sorted.forEach(w => {
-        const dStr = new Date(w.start_time).toISOString().split('T')[0];
-        dailyTrimp[dStr] = (dailyTrimp[dStr] || 0) + (w.trimp_score || 0);
-      });
-
-      const dates = [];
-      const ctlData = [];
-      const atlData = [];
-      const tsbData = [];
-
-      let ctl = 0;
-      let atl = 0;
-
-      for (let d = new Date(firstDate); d <= today; d.setDate(d.getDate() + 1)) {
-        const dStr = d.toISOString().split('T')[0];
-        const dayTrimp = dailyTrimp[dStr] || 0;
-
-        ctl = ctl + (dayTrimp - ctl) / 42;
-        atl = atl + (dayTrimp - atl) / 7;
-        const tsb = ctl - atl;
-
-        dates.push(d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
-        ctlData.push(ctl.toFixed(1));
-        atlData.push(atl.toFixed(1));
-        tsbData.push(tsb.toFixed(1));
-      }
-
-      const ctx = document.getElementById('pmcChart').getContext('2d');
-      if (pmcChartInstance) pmcChartInstance.destroy();
-
-      const tsbReferenceLinesPlugin = {
-        id: 'tsbReferenceLines',
-        beforeDraw(chart) {
-          const { ctx, chartArea: { left, right, top, bottom }, scales: { y } } = chart;
-          if (!y) return;
-
-          const amberColor = 'rgba(251, 191, 36, 0.45)';
-          const refLines = [
-            { val: 25, label: 'Polimento (+25)' },
-            { val: 5, label: 'Forma / Prova (+5)' },
-            { val: -10, label: 'Treino Ótimo (-10)' },
-            { val: -30, label: 'Sobrecarga (-30)' }
-          ];
-
-          ctx.save();
-          ctx.setLineDash([4, 4]);
-          ctx.font = '10px sans-serif';
-
-          refLines.forEach(l => {
-            const yPixel = y.getPixelForValue(l.val);
-            if (yPixel >= top && yPixel <= bottom) {
-              ctx.strokeStyle = amberColor;
-              ctx.beginPath();
-              ctx.moveTo(left, yPixel);
-              ctx.lineTo(right, yPixel);
-              ctx.stroke();
-
-              ctx.fillStyle = amberColor;
-              ctx.fillText(l.label, right - 110, yPixel - 3);
-            }
-          });
-
-          ctx.restore();
-        }
-      };
-
-      pmcChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: dates,
-          datasets: [
-            { label: 'Fitness 42', data: ctlData, borderColor: '#38bdf8', borderWidth: 2, tension: 0.2, pointRadius: 0 },
-            { label: 'Fadiga 7', data: atlData, borderColor: '#f43f5e', borderWidth: 1.5, tension: 0.2, pointRadius: 0 },
-            { label: 'Forma', data: tsbData, borderColor: '#fbbf24', backgroundColor: 'rgba(251, 191, 36, 0.08)', borderWidth: 1.5, tension: 0.2, fill: true, pointRadius: 0 }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: { mode: 'index', intersect: false },
-          scales: {
-            x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', maxTicksLimit: 10 } },
-            y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }
-          },
-          plugins: { legend: { display: false } }
-        },
-        plugins: [tsbReferenceLinesPlugin]
-      });
-    }
-
-    function renderVolumeCharts() {
-      if (allWorkouts.length === 0) return;
-
-      const weeklyKm = {};
-      const monthlyKm = {};
-
-      allWorkouts.forEach(w => {
-        const d = new Date(w.start_time);
-        const km = w.distance_meters / 1000;
-
-        const mKey = `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
-        monthlyKm[mKey] = (monthlyKm[mKey] || 0) + km;
-
-        const day = d.getDay();
-        const diffToMonday = d.getDate() - day + (day === 0 ? -6 : 1);
-        const mondayDate = new Date(d);
-        mondayDate.setDate(diffToMonday);
-
-        const wKey = `${mondayDate.getDate().toString().padStart(2, '0')}/${(mondayDate.getMonth() + 1).toString().padStart(2, '0')}`;
-        weeklyKm[wKey] = (weeklyKm[wKey] || 0) + km;
-      });
-
-      const ctxW = document.getElementById('weeklyVolumeChart').getContext('2d');
-      if (weeklyChartInstance) weeklyChartInstance.destroy();
-      weeklyChartInstance = new Chart(ctxW, {
-        type: 'bar',
-        data: {
-          labels: Object.keys(weeklyKm).slice(-8),
-          datasets: [{ label: 'km / semana', data: Object.values(weeklyKm).slice(-8).map(v => v.toFixed(1)), backgroundColor: '#10b981', borderRadius: 6 }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: { grid: { display: false }, ticks: { color: '#64748b' } },
-            y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }
-          },
-          plugins: { legend: { display: false } }
-        }
-      });
-
-      const ctxM = document.getElementById('monthlyVolumeChart').getContext('2d');
-      if (monthlyChartInstance) monthlyChartInstance.destroy();
-      monthlyChartInstance = new Chart(ctxM, {
-        type: 'bar',
-        data: {
-          labels: Object.keys(monthlyKm).slice(-6),
-          datasets: [{ label: 'km / mês', data: Object.values(monthlyKm).slice(-6).map(v => v.toFixed(1)), backgroundColor: '#6366f1', borderRadius: 6 }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: { grid: { display: false }, ticks: { color: '#64748b' } },
-            y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }
-          },
-          plugins: { legend: { display: false } }
-        }
-      });
-    }
-
-    document.getElementById('tcxInput').addEventListener('change', async function(e) {
-      const files = Array.from(e.target.files);
-      if (files.length === 0) return;
-
-      showAlert(`Processando ${files.length} arquivo(s)...`);
-
-      for (const file of files) {
-        const text = await file.text();
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(text, 'text/xml');
-
-        const activity = xml.getElementsByTagName('Activity')[0];
-        if (!activity) continue;
-
-        const startTime = activity.getElementsByTagName('Id')[0]?.textContent || new Date().toISOString();
-        const sport = activity.getAttribute('Sport') || 'running';
-
-        let totalMeters = 0;
-        let totalSecs = 0;
-        let hrWeightedSum = 0;
-        let maxHr = 0;
-        const lapsData = [];
-
-        const laps = xml.getElementsByTagName('Lap');
-        for (let i = 0; i < laps.length; i++) {
-          const lap = laps[i];
-          const secs = parseFloat(lap.getElementsByTagName('TotalTimeSeconds')[0]?.textContent || 0);
-          const meters = parseFloat(lap.getElementsByTagName('DistanceMeters')[0]?.textContent || 0);
-          const avgHrVal = parseInt(lap.getElementsByTagName('AverageHeartRateBpm')[0]?.getElementsByTagName('Value')[0]?.textContent || 0);
-          const maxHrVal = parseInt(lap.getElementsByTagName('MaximumHeartRateBpm')[0]?.getElementsByTagName('Value')[0]?.textContent || 0);
-
-          totalMeters += meters;
-          totalSecs += secs;
-          if (avgHrVal > 0) hrWeightedSum += avgHrVal * secs;
-          if (maxHrVal > maxHr) maxHr = maxHrVal;
-
-          lapsData.push({ lap: i + 1, seconds: secs, meters: meters, avgHr: avgHrVal, maxHr: maxHrVal });
-        }
-
-        const avgHrTotal = totalSecs > 0 ? Math.round(hrWeightedSum / totalSecs) : 0;
-
-        const tps = xml.getElementsByTagName('Trackpoint');
-        const sampledPoints = [];
-        for (let j = 0; j < tps.length; j += 3) {
-          const pt = tps[j];
-          const dist = parseFloat(pt.getElementsByTagName('DistanceMeters')[0]?.textContent || 0);
-          const hr = parseInt(pt.getElementsByTagName('HeartRateBpm')[0]?.getElementsByTagName('Value')[0]?.textContent || 0);
-          const alt = parseFloat(pt.getElementsByTagName('AltitudeMeters')[0]?.textContent || 0);
-          sampledPoints.push({ dist, hr, alt });
-        }
-
-        const hrRatio = avgHrTotal > userHrRest ? (avgHrTotal - userHrRest) / (userHrMax - userHrRest) : 0;
-        const durationMin = totalSecs / 60;
-        const trimp = durationMin * hrRatio * 0.64 * Math.exp(1.92 * hrRatio);
-
-        const { error } = await supabaseClient
-          .from('workouts')
-          .upsert({
-            start_time: startTime,
-            sport: sport,
-            distance_meters: totalMeters,
-            duration_seconds: totalSecs,
-            avg_heart_rate: avgHrTotal,
-            max_heart_rate: maxHr,
-            trimp_score: trimp,
-            laps: lapsData,
-            trackpoints: sampledPoints
-          }, { onConflict: 'start_time' });
-
-        if (error) {
-          console.error(error);
-          showAlert(`Erro ao salvar treino de ${startTime}: ${error.message}`, true);
-        }
-      }
-
-      showAlert('Treino(s) salvo(s) com sucesso!');
-      await loadWorkouts();
-      e.target.value = '';
+    // 1. Buscar os detalhes completos da atividade no Intervals.icu
+    const actRes = await fetch(`https://intervals.icu/api/v1/activity/${activityId}`, {
+      headers: { Authorization: authHeader }
     });
 
-    loadWorkouts();
-  </script>
-</body>
-</html>
+    if (!actRes.ok) {
+      return res.status(actRes.status).json({ error: 'Erro ao buscar treino no Intervals.icu' });
+    }
+
+    const act = await actRes.json();
+
+    // 2. Buscar telemetria de pontos (distância, FC, altitude) para o gráfico
+    let trackpoints = [];
+    try {
+      const streamRes = await fetch(`https://intervals.icu/api/v1/activity/${activityId}/streams?types=time,distance,heartrate,altitude`, {
+        headers: { Authorization: authHeader }
+      });
+      if (streamRes.ok) {
+        const streams = await streamRes.json();
+        const distStream = streams.find(s => s.type === 'distance')?.data || [];
+        const hrStream = streams.find(s => s.type === 'heartrate')?.data || [];
+        const altStream = streams.find(s => s.type === 'altitude')?.data || [];
+
+        for (let j = 0; j < distStream.length; j += 3) {
+          trackpoints.push({
+            dist: distStream[j] || 0,
+            hr: hrStream[j] || 0,
+            alt: altStream[j] || 0
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Streams não disponíveis para este treino:', e);
+    }
+
+    // 3. Montar splits por volta (Laps)
+    const laps = (act.laps || []).map((l, idx) => ({
+      lap: idx + 1,
+      seconds: l.moving_time || l.elapsed_time || 0,
+      meters: l.distance || 0,
+      avgHr: Math.round(l.average_heartrate || 0),
+      maxHr: Math.round(l.max_heartrate || 0)
+    }));
+
+    // 4. Buscar zonas do atleta salvas no Supabase para calibrar o TRIMP
+    let hrRest = 50;
+    let hrMax = 185;
+    try {
+      const settingsRes = await fetch(`${SUPABASE_URL}/rest/v1/user_settings?id=eq.1&select=*`, {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`
+        }
+      });
+      const settingsData = await settingsRes.json();
+      if (settingsData && settingsData[0]) {
+        hrRest = settingsData[0].hr_rest || 50;
+        hrMax = settingsData[0].hr_max || 185;
+      }
+    } catch (e) {
+      console.warn('Usando padrões de FC:', e);
+    }
+
+    // 5. Cálculo do TRIMP
+    const avgHr = Math.round(act.average_heartrate || 0);
+    const durationSecs = act.moving_time || act.elapsed_time || 0;
+    const durationMin = durationSecs / 60;
+    const hrRatio = avgHr > hrRest ? (avgHr - hrRest) / (hrMax - hrRest) : 0;
+    const trimp = durationMin * hrRatio * 0.64 * Math.exp(1.92 * hrRatio);
+
+    // 6. Gravar ou atualizar o treino no Supabase
+    const supabasePayload = {
+      start_time: act.start_date_local || act.start_date,
+      sport: (act.type || 'running').toLowerCase(),
+      distance_meters: act.distance || 0,
+      duration_seconds: durationSecs,
+      avg_heart_rate: avgHr,
+      max_heart_rate: Math.round(act.max_heartrate || 0),
+      trimp_score: trimp,
+      laps: laps,
+      trackpoints: trackpoints
+    };
+
+    const supaRes = await fetch(`${SUPABASE_URL}/rest/v1/workouts`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify(supabasePayload)
+    });
+
+    if (!supaRes.ok) {
+      const supaErr = await supaRes.text();
+      return res.status(500).json({ error: 'Erro ao salvar no Supabase', details: supaErr });
+    }
+
+    return res.status(200).json({ success: true, activity: act.id });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: err.message });
+  }
+}
