@@ -7,6 +7,7 @@ export default async function handler(req, res) {
   const authHeader = 'Basic ' + Buffer.from('API_KEY:' + API_KEY).toString('base64');
 
   try {
+    // Se passar ?full=true na URL, busca todo o histórico (desde 2024). Senão, últimos 15 dias.
     const isFull = req.query.full === 'true';
     let oldest = req.query.oldest;
 
@@ -65,23 +66,19 @@ export default async function handler(req, res) {
       const startTime = act.start_date_local || act.start_date;
       const existingWorkout = existingMap.get(startTime);
 
-      // Se não for sincronização total, pula treinos que já possuem o pace oficial nas voltas
-      const hasLapsWithPace = existingWorkout && 
-        Array.isArray(existingWorkout.laps) && 
-        existingWorkout.laps.length > 0 && 
-        existingWorkout.laps[0].pace !== undefined;
+      // Treinos que já possuem laps E linha de pace válida são ignorados
+      const hasLaps = existingWorkout && Array.isArray(existingWorkout.laps) && existingWorkout.laps.length > 0;
+      const hasPaceInTrackpoints = existingWorkout && Array.isArray(existingWorkout.trackpoints) && existingWorkout.trackpoints.length > 0 && existingWorkout.trackpoints.some(tp => tp.pace !== null && tp.pace !== undefined);
 
-      if (!isFull && hasLapsWithPace) {
+      if (hasLaps && hasPaceInTrackpoints) {
         continue;
       }
 
-      // 1. Obter telemetria (streams) com velocity_smooth
       let trackpoints = [];
       let timeStream = [];
       let distStream = [];
       let hrStream = [];
       let altStream = [];
-      let velStream = [];
 
       try {
         let streamRes = await fetch(`https://intervals.icu/api/v1/activity/${act.id}/streams.json`, {
@@ -89,7 +86,7 @@ export default async function handler(req, res) {
         });
 
         if (!streamRes.ok) {
-          streamRes = await fetch(`https://intervals.icu/api/v1/activity/${act.id}/streams?types=time,distance,heartrate,altitude,velocity_smooth`, {
+          streamRes = await fetch(`https://intervals.icu/api/v1/activity/${act.id}/streams?types=time,distance,heartrate,altitude`, {
             headers: { Authorization: authHeader }
           });
         }
@@ -100,19 +97,10 @@ export default async function handler(req, res) {
           distStream = streams.find(s => s.type === 'distance')?.data || [];
           hrStream = streams.find(s => s.type === 'heartrate')?.data || [];
           altStream = streams.find(s => s.type === 'altitude')?.data || [];
-          velStream = streams.find(s => s.type === 'velocity_smooth')?.data || [];
 
           for (let j = 0; j < distStream.length; j += 3) {
             let pSecs = null;
-            const v = (velStream && velStream.length > j) ? velStream[j] : null;
-
-            // Usa velocidade instantânea oficial do sensor (m/s) para converter em s/km
-            if (v !== null && v > 0.5) {
-              const paceVal = Math.round(1000 / v);
-              if (paceVal >= 90 && paceVal <= 900) {
-                pSecs = paceVal;
-              }
-            } else if (j >= 3 && timeStream.length > j) {
+            if (j >= 3 && timeStream.length > j) {
               const dDist = distStream[j] - distStream[j - 3];
               const dTime = timeStream[j] - timeStream[j - 3];
               if (dDist > 3 && dTime > 0) {
@@ -136,7 +124,6 @@ export default async function handler(req, res) {
         console.warn(`Streams indisponíveis para atividade ${act.id}:`, e);
       }
 
-      // 2. Obter voltas oficiais da Garmin (FIT laps)
       let laps = [];
       try {
         const actDetailRes = await fetch(`https://intervals.icu/api/v1/activity/${act.id}?intervals=true`, {
@@ -144,81 +131,21 @@ export default async function handler(req, res) {
         });
         if (actDetailRes.ok) {
           const actDetail = await actDetailRes.json();
-          
-          // Prioridade 1: laps nativos gravados pelo relógio Garmin
-          const rawLaps = (Array.isArray(actDetail.laps) && actDetail.laps.length > 0)
-            ? actDetail.laps
-            : (Array.isArray(actDetail.icu_intervals) && actDetail.icu_intervals.length > 0)
-              ? actDetail.icu_intervals
-              : [];
-
-          if (rawLaps.length > 0) {
-            laps = rawLaps.map((lap, idx) => {
-              let meters = lap.distance;
-              if ((meters === undefined || meters === null) && lap.start_index !== undefined && lap.end_index !== undefined && distStream.length > 0) {
-                const eIdx = Math.min(distStream.length - 1, lap.end_index);
-                const sIdx = Math.min(distStream.length - 1, Math.max(0, lap.start_index));
-                meters = distStream[eIdx] - distStream[sIdx];
-              }
-              meters = Math.round(meters || 0);
-
-              let seconds = lap.moving_time || lap.elapsed_time;
-              if ((seconds === undefined || seconds === null) && lap.start_index !== undefined && lap.end_index !== undefined && timeStream.length > 0) {
-                const eIdx = Math.min(timeStream.length - 1, lap.end_index);
-                const sIdx = Math.min(timeStream.length - 1, Math.max(0, lap.start_index));
-                seconds = timeStream[eIdx] - timeStream[sIdx];
-              }
-              seconds = Math.round(seconds || 0);
-
-              // Velocidade média da volta registrada pelo Garmin (m/s)
-              let avgSpeed = lap.average_speed || lap.avg_speed || 0;
-              if (!avgSpeed && seconds > 0 && meters > 0) {
-                avgSpeed = meters / seconds;
-              }
-
-              // Pace oficial da volta em segundos/km (1000 / avgSpeed)
-              const lapPace = avgSpeed > 0 
-                ? Math.round(1000 / avgSpeed) 
-                : (meters > 0 && seconds > 0 ? Math.round(seconds / (meters / 1000)) : 0);
-
-              let avgHr = lap.average_heartrate || lap.avg_heart_rate || 0;
-              let maxHr = lap.max_heartrate || lap.max_heart_rate || 0;
-
-              if ((!avgHr || !maxHr) && lap.start_index !== undefined && lap.end_index !== undefined && hrStream.length > 0) {
-                let hrSum = 0;
-                let hrCount = 0;
-                let hrMaxVal = 0;
-                const sIdx = Math.max(0, lap.start_index);
-                const eIdx = Math.min(hrStream.length, lap.end_index);
-                for (let k = sIdx; k < eIdx; k++) {
-                  const h = hrStream[k];
-                  if (h && h > 0) {
-                    hrSum += h;
-                    hrCount++;
-                    if (h > hrMaxVal) hrMaxVal = h;
-                  }
-                }
-                if (!avgHr && hrCount > 0) avgHr = Math.round(hrSum / hrCount);
-                if (!maxHr && hrMaxVal > 0) maxHr = hrMaxVal;
-              }
-
-              return {
-                lap: idx + 1,
-                seconds: seconds,
-                meters: meters,
-                avg_speed: avgSpeed,
-                pace: lapPace,
-                avgHr: Math.round(avgHr || 0),
-                maxHr: Math.round(maxHr || 0)
-              };
-            });
+          const intervals = actDetail.icu_intervals || actDetail.intervals || [];
+          if (intervals.length > 1) {
+            laps = intervals.map((iv, idx) => ({
+              lap: idx + 1,
+              seconds: Math.round(iv.moving_time || iv.elapsed_time || 0),
+              meters: Math.round(iv.distance || 0),
+              avgHr: Math.round(iv.average_heartrate || 0),
+              maxHr: Math.round(iv.max_heartrate || 0)
+            }));
           }
         }
       } catch (e) {
-        console.warn('Erro ao consultar voltas nativas:', e);
+        console.warn('Erro ao consultar intervalos:', e);
       }
 
-      // 3. Fallback: Se não houver marcação de voltas, fatiar em splits de 1 km
       if (laps.length <= 1 && distStream.length > 0) {
         const splits = [];
         let lapStartIndex = 0;
@@ -239,8 +166,6 @@ export default async function handler(req, res) {
               let hrSum = 0;
               let hrCount = 0;
               let lapMaxHr = 0;
-              let velSum = 0;
-              let velCount = 0;
 
               for (let j = lapStartIndex; j <= i; j++) {
                 const h = hrStream[j];
@@ -249,21 +174,12 @@ export default async function handler(req, res) {
                   hrCount++;
                   if (h > lapMaxHr) lapMaxHr = h;
                 }
-                if (velStream.length > j && velStream[j] && velStream[j] > 0.5) {
-                  velSum += velStream[j];
-                  velCount++;
-                }
               }
-
-              const avgSpeed = velCount > 0 ? (velSum / velCount) : (lapMeters / lapSecs);
-              const lapPace = avgSpeed > 0 ? Math.round(1000 / avgSpeed) : Math.round(lapSecs / (lapMeters / 1000));
 
               splits.push({
                 lap: lapNum++,
                 seconds: Math.round(lapSecs),
                 meters: Math.round(lapMeters),
-                avg_speed: avgSpeed,
-                pace: lapPace,
                 avgHr: hrCount > 0 ? Math.round(hrSum / hrCount) : 0,
                 maxHr: lapMaxHr
               });
@@ -277,12 +193,8 @@ export default async function handler(req, res) {
         if (splits.length > 0) laps = splits;
       }
 
-      // 4. Duração alinhada à velocidade média oficial do Garmin
-      const durationSecs = (act.average_speed && act.average_speed > 0 && act.distance > 0)
-        ? Math.round(act.distance / act.average_speed)
-        : (act.moving_time || act.elapsed_time || 0);
-
       const avgHr = Math.round(act.average_heartrate || 0);
+      const durationSecs = act.moving_time || act.elapsed_time || 0;
       const durationMin = durationSecs / 60;
       const hrRatio = avgHr > hrRest ? (avgHr - hrRest) / (hrMax - hrRest) : 0;
       const trimp = durationMin * hrRatio * 0.64 * Math.exp(1.92 * hrRatio);
@@ -310,15 +222,18 @@ export default async function handler(req, res) {
       });
 
       if (saveRes.ok) {
-        if (existingWorkout) updatedCount++;
-        else syncedCount++;
+        if (existingWorkout) {
+          updatedCount++;
+        } else {
+          syncedCount++;
+        }
       }
     }
 
     return res.status(200).json({ 
       success: true, 
       novosSincronizados: syncedCount, 
-      atualizadosComPaceOficial: updatedCount, 
+      antigosAtualizadosComPace: updatedCount, 
       totalAnalisados: activities.length 
     });
   } catch (err) {
