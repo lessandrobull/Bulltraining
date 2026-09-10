@@ -7,7 +7,6 @@ export default async function handler(req, res) {
   const authHeader = 'Basic ' + Buffer.from('API_KEY:' + API_KEY).toString('base64');
 
   try {
-    // 1. Buscar treinos dos últimos 15 dias no Intervals.icu
     const d = new Date();
     d.setDate(d.getDate() - 15);
     const oldest = d.toISOString().split('T')[0];
@@ -26,14 +25,15 @@ export default async function handler(req, res) {
       return res.status(200).json({ message: 'Nenhum treino retornado pelo Intervals.icu nos últimos 15 dias.', synced: 0 });
     }
 
-    // 2. Buscar treinos já gravados no Supabase
-    const supaCheck = await fetch(`${SUPABASE_URL}/rest/v1/workouts?select=start_time`, {
+    const supaCheck = await fetch(`${SUPABASE_URL}/rest/v1/workouts?select=id,start_time,laps,trackpoints`, {
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
     });
     const existing = await supaCheck.json();
-    const existingTimes = new Set((existing || []).map(w => w.start_time));
+    const existingMap = new Map();
+    (existing || []).forEach(w => {
+      existingMap.set(w.start_time, w);
+    });
 
-    // 3. Buscar configurações de FC
     let hrRest = 50;
     let hrMax = 185;
     try {
@@ -53,25 +53,62 @@ export default async function handler(req, res) {
 
     for (const act of activities) {
       const startTime = act.start_date_local || act.start_date;
-      if (existingTimes.has(startTime)) continue;
+      const existingWorkout = existingMap.get(startTime);
 
-      // Telemetria (FC, distância, altitude)
+      // Reprocessa caso falte laps ou se os trackpoints ainda não tiverem pace
+      const hasLaps = existingWorkout && Array.isArray(existingWorkout.laps) && existingWorkout.laps.length > 0;
+      const hasPaceInTrackpoints = existingWorkout && Array.isArray(existingWorkout.trackpoints) && existingWorkout.trackpoints.length > 0 && existingWorkout.trackpoints[0].pace !== undefined && existingWorkout.trackpoints[0].pace !== null;
+
+      if (hasLaps && hasPaceInTrackpoints) {
+        continue;
+      }
+
       let trackpoints = [];
+      let timeStream = [];
+      let distStream = [];
+      let hrStream = [];
+      let altStream = [];
+
       try {
-        const streamRes = await fetch(`https://intervals.icu/api/v1/activity/${act.id}/streams?types=time,distance,heartrate,altitude`, {
+        // Chamada direta para streams.json sem filtros frágeis que causam erro 422
+        let streamRes = await fetch(`https://intervals.icu/api/v1/activity/${act.id}/streams.json`, {
           headers: { Authorization: authHeader }
         });
+
+        // Fallback para streams padrão caso o endpoint .json não responda
+        if (!streamRes.ok) {
+          streamRes = await fetch(`https://intervals.icu/api/v1/activity/${act.id}/streams?types=time,distance,heartrate,altitude`, {
+            headers: { Authorization: authHeader }
+          });
+        }
+
         if (streamRes.ok) {
           const streams = await streamRes.json();
-          const distStream = streams.find(s => s.type === 'distance')?.data || [];
-          const hrStream = streams.find(s => s.type === 'heartrate')?.data || [];
-          const altStream = streams.find(s => s.type === 'altitude')?.data || [];
+          timeStream = streams.find(s => s.type === 'time')?.data || [];
+          distStream = streams.find(s => s.type === 'distance')?.data || [];
+          hrStream = streams.find(s => s.type === 'heartrate')?.data || [];
+          altStream = streams.find(s => s.type === 'altitude')?.data || [];
 
           for (let j = 0; j < distStream.length; j += 3) {
+            let pSecs = null;
+            // Cálculo do Pace suavizado baseado no deslocamento de tempo e distância
+            if (j >= 3 && timeStream.length > j) {
+              const dDist = distStream[j] - distStream[j - 3];
+              const dTime = timeStream[j] - timeStream[j - 3];
+              if (dDist > 3 && dTime > 0) {
+                const spk = dTime / (dDist / 1000);
+                if (spk >= 120 && spk <= 800) {
+                  pSecs = Math.round(spk);
+                }
+              }
+            }
+
             trackpoints.push({
               dist: distStream[j] || 0,
               hr: hrStream[j] || 0,
-              alt: altStream[j] || 0
+              alt: altStream[j] || 0,
+              pace: pSecs,
+              time: timeStream[j] || 0
             });
           }
         }
@@ -79,23 +116,83 @@ export default async function handler(req, res) {
         console.warn('Streams indisponíveis:', e);
       }
 
-      // Splits por Km
-      const laps = (act.laps || []).map((l, idx) => ({
-        lap: idx + 1,
-        seconds: l.moving_time || l.elapsed_time || 0,
-        meters: l.distance || 0,
-        avgHr: Math.round(l.average_heartrate || 0),
-        maxHr: Math.round(l.max_heartrate || 0)
-      }));
+      // Voltas (Laps / Splits)
+      let laps = [];
+      try {
+        const actDetailRes = await fetch(`https://intervals.icu/api/v1/activity/${act.id}?intervals=true`, {
+          headers: { Authorization: authHeader }
+        });
+        if (actDetailRes.ok) {
+          const actDetail = await actDetailRes.json();
+          const intervals = actDetail.icu_intervals || actDetail.intervals || [];
+          if (intervals.length > 1) {
+            laps = intervals.map((iv, idx) => ({
+              lap: idx + 1,
+              seconds: Math.round(iv.moving_time || iv.elapsed_time || 0),
+              meters: Math.round(iv.distance || 0),
+              avgHr: Math.round(iv.average_heartrate || 0),
+              maxHr: Math.round(iv.max_heartrate || 0)
+            }));
+          }
+        }
+      } catch (e) {
+        console.warn('Erro ao consultar intervalos:', e);
+      }
 
-      // TRIMP
+      // Fatiamento km a km se não houver voltas manuais
+      if (laps.length <= 1 && distStream.length > 0) {
+        const splits = [];
+        let lapStartIndex = 0;
+        let nextTargetDist = 1000;
+        let lapNum = 1;
+
+        for (let i = 0; i < distStream.length; i++) {
+          const d = distStream[i];
+          const isLast = (i === distStream.length - 1);
+
+          if (d >= nextTargetDist || isLast) {
+            const lapMeters = d - (lapStartIndex > 0 ? distStream[lapStartIndex] : 0);
+            const tEnd = (timeStream.length > i) ? timeStream[i] : i;
+            const tStart = (timeStream.length > lapStartIndex && lapStartIndex > 0) ? timeStream[lapStartIndex] : lapStartIndex;
+            const lapSecs = tEnd - tStart;
+
+            if (lapMeters >= 40 && lapSecs > 0) {
+              let hrSum = 0;
+              let hrCount = 0;
+              let lapMaxHr = 0;
+
+              for (let j = lapStartIndex; j <= i; j++) {
+                const h = hrStream[j];
+                if (h && h > 0) {
+                  hrSum += h;
+                  hrCount++;
+                  if (h > lapMaxHr) lapMaxHr = h;
+                }
+              }
+
+              splits.push({
+                lap: lapNum++,
+                seconds: Math.round(lapSecs),
+                meters: Math.round(lapMeters),
+                avgHr: hrCount > 0 ? Math.round(hrSum / hrCount) : 0,
+                maxHr: lapMaxHr
+              });
+            }
+
+            lapStartIndex = i;
+            nextTargetDist += 1000;
+          }
+        }
+
+        if (splits.length > 0) laps = splits;
+      }
+
       const avgHr = Math.round(act.average_heartrate || 0);
       const durationSecs = act.moving_time || act.elapsed_time || 0;
       const durationMin = durationSecs / 60;
       const hrRatio = avgHr > hrRest ? (avgHr - hrRest) / (hrMax - hrRest) : 0;
       const trimp = durationMin * hrRatio * 0.64 * Math.exp(1.92 * hrRatio);
 
-      // Inserir no Supabase com regra de conflito explícita
       const saveRes = await fetch(`${SUPABASE_URL}/rest/v1/workouts?on_conflict=start_time`, {
         method: 'POST',
         headers: {
@@ -113,15 +210,13 @@ export default async function handler(req, res) {
           max_heart_rate: Math.round(act.max_heartrate || 0),
           trimp_score: trimp,
           laps: laps,
-          trackpoints: trackpoints
+          trackpoints: trackpoints,
+          is_deleted: false
         })
       });
 
       if (saveRes.ok) {
         syncedCount++;
-      } else {
-        const supaErr = await saveRes.text();
-        console.error('Erro ao gravar no Supabase:', supaErr);
       }
     }
 
