@@ -80,7 +80,10 @@
       <div id="workoutDetailContainer" class="bg-slate-900 border border-slate-800 p-3 sm:p-5 rounded-2xl shadow space-y-4 hidden">
         <div class="border-b border-slate-800 pb-2.5">
           <div class="flex items-center justify-between gap-2">
-            <h3 id="workoutDate" class="text-xs sm:text-base font-bold text-slate-100 truncate">-</h3>
+            <div class="min-w-0 flex-1">
+              <h3 id="workoutLocation" class="text-xs sm:text-base font-bold text-slate-100 truncate">-</h3>
+              <p id="workoutDate" class="text-[11px] sm:text-xs text-slate-400 font-medium mt-0.5">-</p>
+            </div>
             <div class="flex items-center gap-2 shrink-0">
               <span id="workoutTrimp" class="text-[11px] sm:text-xs font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-slate-800 text-slate-300 whitespace-nowrap">-</span>
               <button onclick="deleteCurrentWorkout()" class="text-slate-500 hover:text-rose-400 p-1 rounded-lg hover:bg-rose-950/30 transition" title="Excluir treino permanentemente deste painel">
@@ -240,17 +243,18 @@
       return sport ? sport.charAt(0).toUpperCase() + sport.slice(1) : 'Treino';
     }
 
-    function formatWorkoutHeader(w) {
+    // Leitura dos valores exatos da data/hora gravada sem submeter a deslocamento de fuso indevido
+    function getWorkoutDateTime(w) {
       const d = new Date(w.start_time);
-      const days = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
-      const dayName = days[d.getDay()];
-      const day = d.getDate().toString().padStart(2, '0');
-      const month = (d.getMonth() + 1).toString().padStart(2, '0');
-      const year = d.getFullYear();
-      const hours = d.getHours().toString().padStart(2, '0');
-      const minutes = d.getMinutes().toString().padStart(2, '0');
-      const sportName = translateSport(w.sport);
-      return `${sportName}, ${dayName}, ${day}/${month}/${year}, ${hours}:${minutes}`;
+      const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+      return {
+        dayName: days[d.getUTCDay()],
+        day: d.getUTCDate().toString().padStart(2, '0'),
+        month: (d.getUTCMonth() + 1).toString().padStart(2, '0'),
+        year: d.getUTCFullYear(),
+        hours: d.getUTCHours().toString().padStart(2, '0'),
+        minutes: d.getUTCMinutes().toString().padStart(2, '0')
+      };
     }
 
     function getZoneBoundaries() {
@@ -309,7 +313,9 @@
     async function deleteCurrentWorkout() {
       if (!currentWorkout) return;
 
-      const confirmar = confirm(`Deseja excluir permanentemente o treino de ${formatWorkoutHeader(currentWorkout)} deste painel?`);
+      const dt = getWorkoutDateTime(currentWorkout);
+      const sportName = translateSport(currentWorkout.sport);
+      const confirmar = confirm(`Deseja excluir permanentemente o treino de ${sportName}, Indaiatuba, Brasil (${dt.day}/${dt.month}/${dt.year}) deste painel?`);
       if (!confirmar) return;
 
       const { error } = await supabaseClient
@@ -366,16 +372,23 @@
       }
 
       listEl.innerHTML = allWorkouts.map(w => {
-        const titleStr = formatWorkoutHeader(w);
-        const km = (w.distance_meters / 1000).toFixed(2);
+        const dt = getWorkoutDateTime(w);
+        const sportName = translateSport(w.sport);
+        const km = ((w.distance_meters || 0) / 1000).toFixed(2);
         const pace = formatPace(w.duration_seconds, w.distance_meters);
         const trimpVal = Math.round(w.trimp_score || 0);
 
         return `
           <button onclick="openWorkoutDetail('${w.id}')" class="w-full text-left p-3 sm:p-4 rounded-xl bg-slate-950/70 hover:bg-slate-800 border border-slate-800/80 transition flex items-center justify-between gap-2 group">
             <div class="min-w-0 flex-1">
-              <p class="text-xs sm:text-sm font-semibold text-slate-200 group-hover:text-emerald-400 transition truncate">${titleStr}</p>
-              <div class="text-[11px] sm:text-xs text-emerald-400 font-bold mt-0.5 flex flex-wrap items-center gap-x-1.5">
+              <!-- Linha 1: Tipo, Cidade, País -->
+              <p class="text-xs sm:text-sm font-semibold text-slate-200 group-hover:text-emerald-400 transition truncate">${sportName}, Indaiatuba, Brasil</p>
+              
+              <!-- Linha 2: Dia da Semana, Data, Horário -->
+              <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5 font-medium">${dt.dayName}, ${dt.day}/${dt.month}/${dt.year}, ${dt.hours}:${dt.minutes}</p>
+              
+              <!-- Linha 3: Métricas (sem alteração) -->
+              <div class="text-[11px] sm:text-xs text-emerald-400 font-bold mt-1 flex flex-wrap items-center gap-x-1.5">
                 <span class="whitespace-nowrap">${km} km</span>
                 <span class="text-slate-500">•</span>
                 <span class="text-slate-300 whitespace-nowrap">${pace}</span>
@@ -399,10 +412,13 @@
       document.getElementById('workoutListContainer').classList.add('hidden');
       document.getElementById('workoutDetailContainer').classList.remove('hidden');
 
-      document.getElementById('workoutDate').textContent = formatWorkoutHeader(w);
+      const dt = getWorkoutDateTime(w);
+      const sportName = translateSport(w.sport);
+      document.getElementById('workoutLocation').textContent = `${sportName}, Indaiatuba, Brasil`;
+      document.getElementById('workoutDate').textContent = `${dt.dayName}, ${dt.day}/${dt.month}/${dt.year}, ${dt.hours}:${dt.minutes}`;
       document.getElementById('workoutTrimp').textContent = `TRIMP ${Math.round(w.trimp_score || 0)}`;
 
-      document.getElementById('detDist').textContent = `${(w.distance_meters / 1000).toFixed(2)} km`;
+      document.getElementById('detDist').textContent = `${((w.distance_meters || 0) / 1000).toFixed(2)} km`;
       document.getElementById('detTime').textContent = formatTime(w.duration_seconds);
       document.getElementById('detPace').textContent = formatPace(w.duration_seconds, w.distance_meters);
       document.getElementById('detHr').textContent = `${w.avg_heart_rate || '-'} / ${w.max_heart_rate || '-'} bpm`;
@@ -705,7 +721,6 @@
       });
     }
 
-    // Volume com ordenação cronológica estrita
     function renderVolumeCharts() {
       if (allWorkouts.length === 0) return;
 
@@ -716,23 +731,26 @@
         const d = new Date(w.start_time);
         const km = (w.distance_meters || 0) / 1000;
 
-        const mSortKey = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
-        const mLabel = `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear().toString().slice(2)}`;
+        const year = d.getUTCFullYear();
+        const month = (d.getUTCMonth() + 1).toString().padStart(2, '0');
+        const date = d.getUTCDate();
+        const day = d.getUTCDay();
+
+        const mSortKey = `${year}-${month}`;
+        const mLabel = `${month}/${year.toString().slice(2)}`;
         if (!monthlyKm[mSortKey]) {
           monthlyKm[mSortKey] = { label: mLabel, km: 0 };
         }
         monthlyKm[mSortKey].km += km;
 
-        const day = d.getDay();
-        const diffToMonday = d.getDate() - day + (day === 0 ? -6 : 1);
-        const mondayDate = new Date(d);
-        mondayDate.setDate(diffToMonday);
+        const diffToMonday = date - day + (day === 0 ? -6 : 1);
+        const mondayDate = new Date(Date.UTC(year, d.getUTCMonth(), diffToMonday));
 
-        const y = mondayDate.getFullYear();
-        const m = (mondayDate.getMonth() + 1).toString().padStart(2, '0');
-        const dt = mondayDate.getDate().toString().padStart(2, '0');
-        const wSortKey = `${y}-${m}-${dt}`;
-        const wLabel = `${dt}/${m}`;
+        const my = mondayDate.getUTCFullYear();
+        const mm = (mondayDate.getUTCMonth() + 1).toString().padStart(2, '0');
+        const mdt = mondayDate.getUTCDate().toString().padStart(2, '0');
+        const wSortKey = `${my}-${mm}-${mdt}`;
+        const wLabel = `${mdt}/${mm}`;
 
         if (!weeklyKm[wSortKey]) {
           weeklyKm[wSortKey] = { label: wLabel, km: 0 };
@@ -740,7 +758,6 @@
         weeklyKm[wSortKey].km += km;
       });
 
-      // Ordenar cronologicamente do passado para o presente
       const sortedWeekKeys = Object.keys(weeklyKm).sort();
       const recentWeekKeys = sortedWeekKeys.slice(-8);
 
