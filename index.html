@@ -111,7 +111,7 @@
           </div>
         </div>
 
-        <!-- Distribuição por Zonas Estilo Garmin Connect (Barras Preenchidas com Valor na Frente) -->
+        <!-- Distribuição por Zonas Estilo Garmin Connect -->
         <div class="bg-slate-950 p-3.5 sm:p-4 rounded-xl border border-slate-800 space-y-2.5">
           <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Distribuição de Tempo por Zonas</span>
           <div id="zonesBreakdown" class="space-y-2 pt-1"></div>
@@ -335,7 +335,7 @@
         const syncRes = await fetch('/api/sync');
         const syncData = await syncRes.json();
         if (syncData.synced > 0) {
-          showAlert(`${syncData.synced} novo(s) treino(s) sincronizado(s)!`);
+          showAlert(`${syncData.synced} treino(s) atualizado(s) com sucesso!`);
         }
       } catch (e) {
         console.warn('Sync automático:', e);
@@ -424,7 +424,6 @@
       renderDetailChart(w.trackpoints || []);
     }
 
-    // Tabela de Zonas no estilo Garmin Connect: linhas empilhadas com barras preenchidas e valores na frente
     function renderZonesBreakdown(trackpoints) {
       const bounds = getZoneBoundaries();
       let counts = { z1: 0, z2: 0, z3: 0, z4: 0, z5a: 0, z5b: 0 };
@@ -474,7 +473,6 @@
       }).join('');
     }
 
-    // Gráfico de Detalhe com FC, Pace (escala invertida) e Altimetria
     function renderDetailChart(trackpoints) {
       const ctx = document.getElementById('workoutDetailChart').getContext('2d');
       if (detailChartInstance) detailChartInstance.destroy();
@@ -482,32 +480,17 @@
       const labels = trackpoints.map(tp => `${(tp.dist / 1000).toFixed(2)}k`);
       const hrData = trackpoints.map(tp => tp.hr);
       const altData = trackpoints.map(tp => tp.alt);
-
-      // Leitura e fallback de Pace
-      const paceData = trackpoints.map((tp, idx) => {
-        if (tp.pace && tp.pace > 0) return tp.pace;
-        if (tp.speed && tp.speed > 0.5) return Math.round(1000 / tp.speed);
-        if (tp.time !== undefined && idx > 0 && trackpoints[idx - 1].time !== undefined) {
-          const dD = tp.dist - trackpoints[idx - 1].dist;
-          const dT = tp.time - trackpoints[idx - 1].time;
-          if (dD > 5 && dT > 0) {
-            const p = dT / (dD / 1000);
-            return (p >= 120 && p <= 900) ? Math.round(p) : null;
-          }
-        }
-        return null;
-      });
+      const paceData = trackpoints.map(tp => tp.pace || null);
 
       const bounds = getZoneBoundaries();
       const zoneTicks = [bounds.z1Max, bounds.z2Max, bounds.z3Max, bounds.z4Max, bounds.z5aMax, bounds.z5bMax];
 
-      // Ajuste de limites do Pace (mais rápido no topo)
       const validPaces = paceData.filter(p => p !== null && p > 0);
       let minPace = 240;
       let maxPace = 480;
       if (validPaces.length > 0) {
-        minPace = Math.max(120, Math.min(...validPaces) - 15);
-        maxPace = Math.min(720, Math.max(...validPaces) + 15);
+        minPace = Math.max(120, Math.min(...validPaces) - 20);
+        maxPace = Math.min(720, Math.max(...validPaces) + 20);
       }
 
       detailChartInstance = new Chart(ctx, {
@@ -578,7 +561,7 @@
             yPace: {
               type: 'linear',
               position: 'right',
-              reverse: true, // Pace rápido no topo
+              reverse: true,
               min: minPace,
               max: maxPace,
               grid: { display: false },
@@ -611,12 +594,8 @@
                     const s = Math.round(val % 60);
                     return `${label}: ${m}:${s.toString().padStart(2, '0')} /km`;
                   }
-                  if (context.dataset.yAxisID === 'yHr') {
-                    return `${label}: ${val} bpm`;
-                  }
-                  if (context.dataset.yAxisID === 'yAlt') {
-                    return `${label}: ${Math.round(val)} m`;
-                  }
+                  if (context.dataset.yAxisID === 'yHr') return `${label}: ${val} bpm`;
+                  if (context.dataset.yAxisID === 'yAlt') return `${label}: ${Math.round(val)} m`;
                   return `${label}: ${val}`;
                 }
               }
@@ -726,6 +705,7 @@
       });
     }
 
+    // Volume com ordenação cronológica estrita
     function renderVolumeCharts() {
       if (allWorkouts.length === 0) return;
 
@@ -734,27 +714,46 @@
 
       allWorkouts.forEach(w => {
         const d = new Date(w.start_time);
-        const km = w.distance_meters / 1000;
+        const km = (w.distance_meters || 0) / 1000;
 
-        const mKey = `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
-        monthlyKm[mKey] = (monthlyKm[mKey] || 0) + km;
+        const mSortKey = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+        const mLabel = `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear().toString().slice(2)}`;
+        if (!monthlyKm[mSortKey]) {
+          monthlyKm[mSortKey] = { label: mLabel, km: 0 };
+        }
+        monthlyKm[mSortKey].km += km;
 
         const day = d.getDay();
         const diffToMonday = d.getDate() - day + (day === 0 ? -6 : 1);
         const mondayDate = new Date(d);
         mondayDate.setDate(diffToMonday);
 
-        const wKey = `${mondayDate.getDate().toString().padStart(2, '0')}/${(mondayDate.getMonth() + 1).toString().padStart(2, '0')}`;
-        weeklyKm[wKey] = (weeklyKm[wKey] || 0) + km;
+        const y = mondayDate.getFullYear();
+        const m = (mondayDate.getMonth() + 1).toString().padStart(2, '0');
+        const dt = mondayDate.getDate().toString().padStart(2, '0');
+        const wSortKey = `${y}-${m}-${dt}`;
+        const wLabel = `${dt}/${m}`;
+
+        if (!weeklyKm[wSortKey]) {
+          weeklyKm[wSortKey] = { label: wLabel, km: 0 };
+        }
+        weeklyKm[wSortKey].km += km;
       });
+
+      // Ordenar cronologicamente do passado para o presente
+      const sortedWeekKeys = Object.keys(weeklyKm).sort();
+      const recentWeekKeys = sortedWeekKeys.slice(-8);
+
+      const weekLabels = recentWeekKeys.map(k => weeklyKm[k].label);
+      const weekData = recentWeekKeys.map(k => weeklyKm[k].km.toFixed(1));
 
       const ctxW = document.getElementById('weeklyVolumeChart').getContext('2d');
       if (weeklyChartInstance) weeklyChartInstance.destroy();
       weeklyChartInstance = new Chart(ctxW, {
         type: 'bar',
         data: {
-          labels: Object.keys(weeklyKm).slice(-8),
-          datasets: [{ label: 'km / semana', data: Object.values(weeklyKm).slice(-8).map(v => v.toFixed(1)), backgroundColor: '#10b981', borderRadius: 6 }]
+          labels: weekLabels,
+          datasets: [{ label: 'km / semana', data: weekData, backgroundColor: '#10b981', borderRadius: 6 }]
         },
         options: {
           responsive: true,
@@ -767,13 +766,19 @@
         }
       });
 
+      const sortedMonthKeys = Object.keys(monthlyKm).sort();
+      const recentMonthKeys = sortedMonthKeys.slice(-6);
+
+      const monthLabels = recentMonthKeys.map(k => monthlyKm[k].label);
+      const monthData = recentMonthKeys.map(k => monthlyKm[k].km.toFixed(1));
+
       const ctxM = document.getElementById('monthlyVolumeChart').getContext('2d');
       if (monthlyChartInstance) monthlyChartInstance.destroy();
       monthlyChartInstance = new Chart(ctxM, {
         type: 'bar',
         data: {
-          labels: Object.keys(monthlyKm).slice(-6),
-          datasets: [{ label: 'km / mês', data: Object.values(monthlyKm).slice(-6).map(v => v.toFixed(1)), backgroundColor: '#6366f1', borderRadius: 6 }]
+          labels: monthLabels,
+          datasets: [{ label: 'km / mês', data: monthData, backgroundColor: '#6366f1', borderRadius: 6 }]
         },
         options: {
           responsive: true,
