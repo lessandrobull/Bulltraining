@@ -111,11 +111,13 @@
           </div>
         </div>
 
-        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
-          <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider block text-center">Distribuição de Tempo por Zonas</span>
-          <div id="zonesBreakdown" class="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center text-xs"></div>
+        <!-- Distribuição por Zonas Estilo Garmin Connect (Barras Preenchidas com Valor na Frente) -->
+        <div class="bg-slate-950 p-3.5 sm:p-4 rounded-xl border border-slate-800 space-y-2.5">
+          <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Distribuição de Tempo por Zonas</span>
+          <div id="zonesBreakdown" class="space-y-2 pt-1"></div>
         </div>
 
+        <!-- Gráfico do Treino (FC, Pace e Altimetria) -->
         <div class="h-64 sm:h-72 w-full relative pt-1">
           <canvas id="workoutDetailChart"></canvas>
         </div>
@@ -310,7 +312,6 @@
       const confirmar = confirm(`Deseja excluir permanentemente o treino de ${formatWorkoutHeader(currentWorkout)} deste painel?`);
       if (!confirmar) return;
 
-      // Soft delete: marca o treino como deletado para nunca mais ser resincronizado
       const { error } = await supabaseClient
         .from('workouts')
         .update({ is_deleted: true })
@@ -351,7 +352,6 @@
         return;
       }
 
-      // Filtra os treinos excluídos logicamente
       allWorkouts = (data || []).filter(w => !w.is_deleted);
       renderWorkoutList();
       renderPmcChart();
@@ -424,6 +424,7 @@
       renderDetailChart(w.trackpoints || []);
     }
 
+    // Tabela de Zonas no estilo Garmin Connect: linhas empilhadas com barras preenchidas e valores na frente
     function renderZonesBreakdown(trackpoints) {
       const bounds = getZoneBoundaries();
       let counts = { z1: 0, z2: 0, z3: 0, z4: 0, z5a: 0, z5b: 0 };
@@ -440,37 +441,40 @@
         else counts.z5b++;
       });
 
-      const calc = (val) => total > 0 ? ((val / total) * 100).toFixed(0) : 0;
+      const totalSecs = currentWorkout?.duration_seconds || 0;
+
+      const zones = [
+        { name: 'Z1', range: `< ${bounds.z1Max} bpm`, count: counts.z1, barColor: 'bg-sky-400', textColor: 'text-sky-400' },
+        { name: 'Z2', range: `${bounds.z1Max} - ${bounds.z2Max} bpm`, count: counts.z2, barColor: 'bg-emerald-400', textColor: 'text-emerald-400' },
+        { name: 'Z3', range: `${bounds.z2Max} - ${bounds.z3Max} bpm`, count: counts.z3, barColor: 'bg-yellow-400', textColor: 'text-yellow-400' },
+        { name: 'Z4', range: `${bounds.z3Max} - ${bounds.z4Max} bpm`, count: counts.z4, barColor: 'bg-amber-500', textColor: 'text-amber-400' },
+        { name: 'Z5a', range: `${bounds.z4Max} - ${bounds.z5aMax} bpm`, count: counts.z5a, barColor: 'bg-rose-400', textColor: 'text-rose-400' },
+        { name: 'Z5b', range: `≥ ${bounds.z5aMax} bpm`, count: counts.z5b, barColor: 'bg-purple-400', textColor: 'text-purple-400' }
+      ];
 
       const container = document.getElementById('zonesBreakdown');
-      container.innerHTML = `
-        <div class="bg-slate-900 border border-slate-800/80 p-2 rounded-lg">
-          <span class="text-slate-400 block text-[10px]">Z1 (&lt;${bounds.z1Max})</span>
-          <p class="font-bold text-sky-400 text-sm mt-0.5">${calc(counts.z1)}%</p>
-        </div>
-        <div class="bg-slate-900 border border-slate-800/80 p-2 rounded-lg">
-          <span class="text-slate-400 block text-[10px]">Z2 (${bounds.z1Max}-${bounds.z2Max})</span>
-          <p class="font-bold text-emerald-400 text-sm mt-0.5">${calc(counts.z2)}%</p>
-        </div>
-        <div class="bg-slate-900 border border-slate-800/80 p-2 rounded-lg">
-          <span class="text-slate-400 block text-[10px]">Z3 (${bounds.z2Max}-${bounds.z3Max})</span>
-          <p class="font-bold text-yellow-400 text-sm mt-0.5">${calc(counts.z3)}%</p>
-        </div>
-        <div class="bg-slate-900 border border-slate-800/80 p-2 rounded-lg">
-          <span class="text-slate-400 block text-[10px]">Z4 (${bounds.z3Max}-${bounds.z4Max})</span>
-          <p class="font-bold text-amber-500 text-sm mt-0.5">${calc(counts.z4)}%</p>
-        </div>
-        <div class="bg-slate-900 border border-slate-800/80 p-2 rounded-lg">
-          <span class="text-slate-400 block text-[10px]">Z5a (${bounds.z4Max}-${bounds.z5aMax})</span>
-          <p class="font-bold text-rose-400 text-sm mt-0.5">${calc(counts.z5a)}%</p>
-        </div>
-        <div class="bg-slate-900 border border-slate-800/80 p-2 rounded-lg">
-          <span class="text-slate-400 block text-[10px]">Z5b (&ge;${bounds.z5aMax})</span>
-          <p class="font-bold text-purple-400 text-sm mt-0.5">${calc(counts.z5b)}%</p>
-        </div>
-      `;
+      container.innerHTML = zones.map(z => {
+        const pct = total > 0 ? ((z.count / total) * 100).toFixed(0) : 0;
+        const secs = total > 0 ? Math.round((z.count / total) * totalSecs) : 0;
+        return `
+          <div class="flex items-center gap-2 sm:gap-3 py-1">
+            <div class="w-24 sm:w-28 shrink-0 text-left">
+              <span class="font-bold ${z.textColor} text-xs">${z.name}</span>
+              <span class="text-[10px] text-slate-400 block sm:inline sm:ml-1">${z.range}</span>
+            </div>
+            <div class="flex-1 bg-slate-900 rounded-full h-2 sm:h-2.5 overflow-hidden">
+              <div class="${z.barColor} h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+            </div>
+            <div class="w-20 sm:w-24 shrink-0 text-right text-xs">
+              <span class="text-slate-100 font-bold">${pct}%</span>
+              <span class="text-[11px] text-slate-400 ml-1">(${formatTime(secs)})</span>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
+    // Gráfico de Detalhe com FC, Pace (escala invertida) e Altimetria
     function renderDetailChart(trackpoints) {
       const ctx = document.getElementById('workoutDetailChart').getContext('2d');
       if (detailChartInstance) detailChartInstance.destroy();
@@ -479,8 +483,32 @@
       const hrData = trackpoints.map(tp => tp.hr);
       const altData = trackpoints.map(tp => tp.alt);
 
+      // Leitura e fallback de Pace
+      const paceData = trackpoints.map((tp, idx) => {
+        if (tp.pace && tp.pace > 0) return tp.pace;
+        if (tp.speed && tp.speed > 0.5) return Math.round(1000 / tp.speed);
+        if (tp.time !== undefined && idx > 0 && trackpoints[idx - 1].time !== undefined) {
+          const dD = tp.dist - trackpoints[idx - 1].dist;
+          const dT = tp.time - trackpoints[idx - 1].time;
+          if (dD > 5 && dT > 0) {
+            const p = dT / (dD / 1000);
+            return (p >= 120 && p <= 900) ? Math.round(p) : null;
+          }
+        }
+        return null;
+      });
+
       const bounds = getZoneBoundaries();
       const zoneTicks = [bounds.z1Max, bounds.z2Max, bounds.z3Max, bounds.z4Max, bounds.z5aMax, bounds.z5bMax];
+
+      // Ajuste de limites do Pace (mais rápido no topo)
+      const validPaces = paceData.filter(p => p !== null && p > 0);
+      let minPace = 240;
+      let maxPace = 480;
+      if (validPaces.length > 0) {
+        minPace = Math.max(120, Math.min(...validPaces) - 15);
+        maxPace = Math.min(720, Math.max(...validPaces) + 15);
+      }
 
       detailChartInstance = new Chart(ctx, {
         type: 'line',
@@ -488,13 +516,23 @@
           labels: labels,
           datasets: [
             {
-              label: 'FC (Zonas)',
+              label: 'FC (bpm)',
               data: hrData,
               borderColor: '#f43f5e',
               yAxisID: 'yHr',
               borderWidth: 1.8,
               tension: 0.2,
               pointRadius: 0
+            },
+            {
+              label: 'Pace (min/km)',
+              data: paceData,
+              borderColor: '#10b981',
+              yAxisID: 'yPace',
+              borderWidth: 1.6,
+              tension: 0.2,
+              pointRadius: 0,
+              spanGaps: true
             },
             {
               label: 'Altimetria (m)',
@@ -537,9 +575,53 @@
               },
               grid: { color: '#334155' }
             },
-            yAlt: { type: 'linear', position: 'right', grid: { display: false }, ticks: { color: '#38bdf8' } }
+            yPace: {
+              type: 'linear',
+              position: 'right',
+              reverse: true, // Pace rápido no topo
+              min: minPace,
+              max: maxPace,
+              grid: { display: false },
+              ticks: {
+                color: '#10b981',
+                callback: function(val) {
+                  const m = Math.floor(val / 60);
+                  const s = Math.round(val % 60);
+                  return `${m}:${s.toString().padStart(2, '0')}`;
+                }
+              }
+            },
+            yAlt: {
+              type: 'linear',
+              position: 'right',
+              grid: { display: false },
+              ticks: { color: '#38bdf8' }
+            }
           },
-          plugins: { legend: { labels: { color: '#94a3b8', boxWidth: 12 } } }
+          plugins: {
+            legend: { labels: { color: '#94a3b8', boxWidth: 12 } },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.dataset.label || '';
+                  const val = context.parsed.y;
+                  if (val === null || val === undefined) return `${label}: -`;
+                  if (context.dataset.yAxisID === 'yPace') {
+                    const m = Math.floor(val / 60);
+                    const s = Math.round(val % 60);
+                    return `${label}: ${m}:${s.toString().padStart(2, '0')} /km`;
+                  }
+                  if (context.dataset.yAxisID === 'yHr') {
+                    return `${label}: ${val} bpm`;
+                  }
+                  if (context.dataset.yAxisID === 'yAlt') {
+                    return `${label}: ${Math.round(val)} m`;
+                  }
+                  return `${label}: ${val}`;
+                }
+              }
+            }
+          }
         }
       });
     }
