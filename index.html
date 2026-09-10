@@ -243,6 +243,7 @@
       return sport ? sport.charAt(0).toUpperCase() + sport.slice(1) : 'Treino';
     }
 
+    // Leitura dos valores exatos da data/hora gravada sem submeter a deslocamento de fuso indevido
     function getWorkoutDateTime(w) {
       const d = new Date(w.start_time);
       const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -339,8 +340,8 @@
       try {
         const syncRes = await fetch('/api/sync');
         const syncData = await syncRes.json();
-        if (syncData.synced > 0 || syncData.atualizadosComPaceOficial > 0) {
-          showAlert(`Treinos sincronizados e atualizados com o ritmo oficial!`);
+        if (syncData.synced > 0) {
+          showAlert(`${syncData.synced} treino(s) atualizado(s) com sucesso!`);
         }
       } catch (e) {
         console.warn('Sync automático:', e);
@@ -380,8 +381,13 @@
         return `
           <button onclick="openWorkoutDetail('${w.id}')" class="w-full text-left p-3 sm:p-4 rounded-xl bg-slate-950/70 hover:bg-slate-800 border border-slate-800/80 transition flex items-center justify-between gap-2 group">
             <div class="min-w-0 flex-1">
+              <!-- Linha 1: Tipo, Cidade, País -->
               <p class="text-xs sm:text-sm font-semibold text-slate-200 group-hover:text-emerald-400 transition truncate">${sportName}, Indaiatuba, Brasil</p>
+              
+              <!-- Linha 2: Dia da Semana, Data, Horário -->
               <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5 font-medium">${dt.dayName}, ${dt.day}/${dt.month}/${dt.year}, ${dt.hours}:${dt.minutes}</p>
+              
+              <!-- Linha 3: Métricas (sem alteração) -->
               <div class="text-[11px] sm:text-xs text-emerald-400 font-bold mt-1 flex flex-wrap items-center gap-x-1.5">
                 <span class="whitespace-nowrap">${km} km</span>
                 <span class="text-slate-500">•</span>
@@ -421,19 +427,15 @@
 
       const splitsBody = document.getElementById('splitsTableBody');
       const laps = w.laps || [];
-      splitsBody.innerHTML = laps.map((lap, idx) => {
-        // Exibe o ritmo oficial calculado da volta
-        const lapPaceStr = lap.pace ? `${formatTime(lap.pace)} /km` : formatPace(lap.seconds, lap.meters);
-        return `
-          <tr class="hover:bg-slate-800/40 text-slate-300">
-            <td class="py-2 font-semibold text-slate-200">${lap.lap || (idx + 1)}</td>
-            <td class="py-2">${formatTime(lap.seconds)}</td>
-            <td class="py-2 font-bold text-emerald-400">${lapPaceStr}</td>
-            <td class="py-2">${lap.avgHr || '-'} bpm</td>
-            <td class="py-2">${lap.maxHr || '-'} bpm</td>
-          </tr>
-        `;
-      }).join('');
+      splitsBody.innerHTML = laps.map((lap, idx) => `
+        <tr class="hover:bg-slate-800/40 text-slate-300">
+          <td class="py-2 font-semibold text-slate-200">${idx + 1}</td>
+          <td class="py-2">${formatTime(lap.seconds)}</td>
+          <td class="py-2 font-bold text-emerald-400">${formatPace(lap.seconds, lap.meters)}</td>
+          <td class="py-2">${lap.avgHr || '-'} bpm</td>
+          <td class="py-2">${lap.maxHr || '-'} bpm</td>
+        </tr>
+      `).join('');
 
       renderDetailChart(w.trackpoints || []);
     }
