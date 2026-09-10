@@ -7,9 +7,19 @@ export default async function handler(req, res) {
   const authHeader = 'Basic ' + Buffer.from('API_KEY:' + API_KEY).toString('base64');
 
   try {
-    const d = new Date();
-    d.setDate(d.getDate() - 15);
-    const oldest = d.toISOString().split('T')[0];
+    // Se passar ?full=true na URL, busca todo o histórico (desde 2024). Senão, últimos 15 dias.
+    const isFull = req.query.full === 'true';
+    let oldest = req.query.oldest;
+
+    if (!oldest) {
+      if (isFull) {
+        oldest = '2024-01-01';
+      } else {
+        const d = new Date();
+        d.setDate(d.getDate() - 15);
+        oldest = d.toISOString().split('T')[0];
+      }
+    }
 
     const listRes = await fetch(`https://intervals.icu/api/v1/athlete/${ATHLETE_ID}/activities?oldest=${oldest}`, {
       headers: { Authorization: authHeader }
@@ -22,7 +32,7 @@ export default async function handler(req, res) {
 
     const activities = await listRes.json();
     if (!Array.isArray(activities) || activities.length === 0) {
-      return res.status(200).json({ message: 'Nenhum treino retornado pelo Intervals.icu nos últimos 15 dias.', synced: 0 });
+      return res.status(200).json({ message: 'Nenhum treino encontrado.', synced: 0 });
     }
 
     const supaCheck = await fetch(`${SUPABASE_URL}/rest/v1/workouts?select=id,start_time,laps,trackpoints`, {
@@ -50,14 +60,15 @@ export default async function handler(req, res) {
     }
 
     let syncedCount = 0;
+    let updatedCount = 0;
 
     for (const act of activities) {
       const startTime = act.start_date_local || act.start_date;
       const existingWorkout = existingMap.get(startTime);
 
-      // Reprocessa caso falte laps ou se os trackpoints ainda não tiverem pace
+      // Treinos que já possuem laps E linha de pace válida são ignorados
       const hasLaps = existingWorkout && Array.isArray(existingWorkout.laps) && existingWorkout.laps.length > 0;
-      const hasPaceInTrackpoints = existingWorkout && Array.isArray(existingWorkout.trackpoints) && existingWorkout.trackpoints.length > 0 && existingWorkout.trackpoints[0].pace !== undefined && existingWorkout.trackpoints[0].pace !== null;
+      const hasPaceInTrackpoints = existingWorkout && Array.isArray(existingWorkout.trackpoints) && existingWorkout.trackpoints.length > 0 && existingWorkout.trackpoints.some(tp => tp.pace !== null && tp.pace !== undefined);
 
       if (hasLaps && hasPaceInTrackpoints) {
         continue;
@@ -70,12 +81,10 @@ export default async function handler(req, res) {
       let altStream = [];
 
       try {
-        // Chamada direta para streams.json sem filtros frágeis que causam erro 422
         let streamRes = await fetch(`https://intervals.icu/api/v1/activity/${act.id}/streams.json`, {
           headers: { Authorization: authHeader }
         });
 
-        // Fallback para streams padrão caso o endpoint .json não responda
         if (!streamRes.ok) {
           streamRes = await fetch(`https://intervals.icu/api/v1/activity/${act.id}/streams?types=time,distance,heartrate,altitude`, {
             headers: { Authorization: authHeader }
@@ -91,7 +100,6 @@ export default async function handler(req, res) {
 
           for (let j = 0; j < distStream.length; j += 3) {
             let pSecs = null;
-            // Cálculo do Pace suavizado baseado no deslocamento de tempo e distância
             if (j >= 3 && timeStream.length > j) {
               const dDist = distStream[j] - distStream[j - 3];
               const dTime = timeStream[j] - timeStream[j - 3];
@@ -113,10 +121,9 @@ export default async function handler(req, res) {
           }
         }
       } catch (e) {
-        console.warn('Streams indisponíveis:', e);
+        console.warn(`Streams indisponíveis para atividade ${act.id}:`, e);
       }
 
-      // Voltas (Laps / Splits)
       let laps = [];
       try {
         const actDetailRes = await fetch(`https://intervals.icu/api/v1/activity/${act.id}?intervals=true`, {
@@ -139,7 +146,6 @@ export default async function handler(req, res) {
         console.warn('Erro ao consultar intervalos:', e);
       }
 
-      // Fatiamento km a km se não houver voltas manuais
       if (laps.length <= 1 && distStream.length > 0) {
         const splits = [];
         let lapStartIndex = 0;
@@ -216,11 +222,20 @@ export default async function handler(req, res) {
       });
 
       if (saveRes.ok) {
-        syncedCount++;
+        if (existingWorkout) {
+          updatedCount++;
+        } else {
+          syncedCount++;
+        }
       }
     }
 
-    return res.status(200).json({ success: true, synced: syncedCount, totalEncontrados: activities.length });
+    return res.status(200).json({ 
+      success: true, 
+      novosSincronizados: syncedCount, 
+      antigosAtualizadosComPace: updatedCount, 
+      totalAnalisados: activities.length 
+    });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
