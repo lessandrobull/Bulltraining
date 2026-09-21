@@ -26,6 +26,14 @@
       </div>
 
       <div class="flex items-center gap-1.5 sm:gap-2">
+        <!-- Botão de Sincronização Manual sob Demanda -->
+        <button id="btnSync" onclick="manualSync()" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 p-1.5 sm:p-2 rounded-xl border border-slate-700 transition shadow flex items-center gap-1 text-xs font-semibold" title="Sincronizar com Intervals.icu">
+          <svg id="syncIcon" class="w-4 h-4 sm:w-5 sm:h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          <span class="hidden sm:inline">Sincronizar</span>
+        </button>
+
         <button onclick="openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-1.5 sm:p-2 rounded-xl border border-slate-700 transition shadow" title="Configurações de Frequência Cardíaca">
           <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
@@ -145,24 +153,37 @@
     <!-- ABA 2: FITNESS & FADIGA -->
     <section id="tab-pmc" class="hidden space-y-4">
       <div class="bg-slate-900 border border-slate-800 p-3 sm:p-5 rounded-2xl shadow space-y-3">
-        <div>
-          <h2 class="text-sm sm:text-base font-bold text-slate-100">Gráfico de Gestão de Desempenho</h2>
-          <div class="flex items-center gap-3 text-[11px] sm:text-xs whitespace-nowrap mt-1.5">
-            <span class="inline-flex items-center gap-1">
-              <span class="w-2 h-2 rounded-full bg-sky-400 inline-block"></span>
-              <span class="text-slate-300">Fitness 42</span>
-            </span>
-            <span class="inline-flex items-center gap-1">
-              <span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span>
-              <span class="text-slate-300">Fadiga 7</span>
-            </span>
-            <span class="inline-flex items-center gap-1">
-              <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
-              <span class="text-slate-300">Forma</span>
-            </span>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+          <div>
+            <h2 class="text-sm sm:text-base font-bold text-slate-100">Gráfico de Gestão de Desempenho</h2>
+            <div class="flex items-center gap-3 text-[11px] sm:text-xs whitespace-nowrap mt-1">
+              <span class="inline-flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-sky-400 inline-block"></span>
+                <span class="text-slate-300">Fitness 42</span>
+              </span>
+              <span class="inline-flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span>
+                <span class="text-slate-300">Fadiga 7</span>
+              </span>
+              <span class="inline-flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
+                <span class="text-slate-300">Forma</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Seletor de Períodos Estilo Elevate -->
+          <div class="flex flex-wrap items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 self-start sm:self-auto">
+            <button onclick="setPmcPeriod('all')" id="btn-pmc-all" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-500 text-slate-950 transition">Tudo</button>
+            <button onclick="setPmcPeriod('1y')" id="btn-pmc-1y" class="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition">1 Ano</button>
+            <button onclick="setPmcPeriod('6m')" id="btn-pmc-6m" class="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition">6 Meses</button>
+            <button onclick="setPmcPeriod('3m')" id="btn-pmc-3m" class="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition">3 Meses</button>
+            <button onclick="setPmcPeriod('2m')" id="btn-pmc-2m" class="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition">2 Meses</button>
+            <button onclick="setPmcPeriod('1m')" id="btn-pmc-1m" class="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition">1 Mês</button>
           </div>
         </div>
-        <div class="h-80 sm:h-96 w-full relative">
+
+        <div class="h-80 sm:h-96 w-full relative pt-1">
           <canvas id="pmcChart"></canvas>
         </div>
       </div>
@@ -198,6 +219,7 @@
 
     let userHrRest = 50;
     let userHrMax = 185;
+    let currentPmcPeriod = 'all';
 
     function switchTab(tabId) {
       ['tab-workouts', 'tab-pmc', 'tab-volume'].forEach(id => {
@@ -243,7 +265,6 @@
       return sport ? sport.charAt(0).toUpperCase() + sport.slice(1) : 'Treino';
     }
 
-    // Leitura dos valores exatos da data/hora gravada sem submeter a deslocamento de fuso indevido
     function getWorkoutDateTime(w) {
       const d = new Date(w.start_time);
       const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -331,22 +352,11 @@
       showAlert('Treino excluído com sucesso!');
       currentWorkout = null;
       switchTab('tab-workouts');
-      await loadWorkouts();
+      await fetchWorkoutsFromDB();
     }
 
-    async function loadWorkouts() {
-      await loadSettings();
-
-      try {
-        const syncRes = await fetch('/api/sync');
-        const syncData = await syncRes.json();
-        if (syncData.synced > 0) {
-          showAlert(`${syncData.synced} treino(s) atualizado(s) com sucesso!`);
-        }
-      } catch (e) {
-        console.warn('Sync automático:', e);
-      }
-
+    // Carregamento ultrarrápido: lê do Supabase diretamente sem travar a tela
+    async function fetchWorkoutsFromDB() {
       const { data, error } = await supabaseClient
         .from('workouts')
         .select('*')
@@ -364,10 +374,42 @@
       renderVolumeCharts();
     }
 
+    async function loadWorkouts() {
+      await loadSettings();
+      await fetchWorkoutsFromDB();
+    }
+
+    // Sincronização disparada sob demanda pelo botão no topo
+    async function manualSync() {
+      const syncBtn = document.getElementById('btnSync');
+      const syncIcon = document.getElementById('syncIcon');
+      syncIcon.classList.add('animate-spin');
+      syncBtn.disabled = true;
+
+      showAlert('Verificando atualizações no Intervals.icu...');
+
+      try {
+        const syncRes = await fetch('/api/sync');
+        const syncData = await syncRes.json();
+        if (syncData.synced > 0 || syncData.atualizadosComPaceOficial > 0 || syncData.antigosAtualizadosComPace > 0) {
+          showAlert(`Sincronização concluída! Novos treinos atualizados.`);
+          await fetchWorkoutsFromDB();
+        } else {
+          showAlert('Seus treinos já estão 100% atualizados.');
+        }
+      } catch (e) {
+        console.error('Erro na sincronização:', e);
+        showAlert('Não foi possível sincronizar agora. Verifique a conexão.', true);
+      } finally {
+        syncIcon.classList.remove('animate-spin');
+        syncBtn.disabled = false;
+      }
+    }
+
     function renderWorkoutList() {
       const listEl = document.getElementById('workoutList');
       if (allWorkouts.length === 0) {
-        listEl.innerHTML = `<p class="text-slate-500 text-sm p-2">Nenhum treino encontrado. Seus próximos treinos no Garmin aparecerão aqui automaticamente.</p>`;
+        listEl.innerHTML = `<p class="text-slate-500 text-sm p-2">Nenhum treino encontrado. Clique no botão "Sincronizar" acima para puxar os dados.</p>`;
         return;
       }
 
@@ -381,13 +423,8 @@
         return `
           <button onclick="openWorkoutDetail('${w.id}')" class="w-full text-left p-3 sm:p-4 rounded-xl bg-slate-950/70 hover:bg-slate-800 border border-slate-800/80 transition flex items-center justify-between gap-2 group">
             <div class="min-w-0 flex-1">
-              <!-- Linha 1: Tipo, Cidade, País -->
               <p class="text-xs sm:text-sm font-semibold text-slate-200 group-hover:text-emerald-400 transition truncate">${sportName}, Indaiatuba, Brasil</p>
-              
-              <!-- Linha 2: Dia da Semana, Data, Horário -->
               <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5 font-medium">${dt.dayName}, ${dt.day}/${dt.month}/${dt.year}, ${dt.hours}:${dt.minutes}</p>
-              
-              <!-- Linha 3: Métricas (sem alteração) -->
               <div class="text-[11px] sm:text-xs text-emerald-400 font-bold mt-1 flex flex-wrap items-center gap-x-1.5">
                 <span class="whitespace-nowrap">${km} km</span>
                 <span class="text-slate-500">•</span>
@@ -427,15 +464,18 @@
 
       const splitsBody = document.getElementById('splitsTableBody');
       const laps = w.laps || [];
-      splitsBody.innerHTML = laps.map((lap, idx) => `
-        <tr class="hover:bg-slate-800/40 text-slate-300">
-          <td class="py-2 font-semibold text-slate-200">${idx + 1}</td>
-          <td class="py-2">${formatTime(lap.seconds)}</td>
-          <td class="py-2 font-bold text-emerald-400">${formatPace(lap.seconds, lap.meters)}</td>
-          <td class="py-2">${lap.avgHr || '-'} bpm</td>
-          <td class="py-2">${lap.maxHr || '-'} bpm</td>
-        </tr>
-      `).join('');
+      splitsBody.innerHTML = laps.map((lap, idx) => {
+        const lapPaceStr = lap.pace ? `${formatTime(lap.pace)} /km` : formatPace(lap.seconds, lap.meters);
+        return `
+          <tr class="hover:bg-slate-800/40 text-slate-300">
+            <td class="py-2 font-semibold text-slate-200">${lap.lap || (idx + 1)}</td>
+            <td class="py-2">${formatTime(lap.seconds)}</td>
+            <td class="py-2 font-bold text-emerald-400">${lapPaceStr}</td>
+            <td class="py-2">${lap.avgHr || '-'} bpm</td>
+            <td class="py-2">${lap.maxHr || '-'} bpm</td>
+          </tr>
+        `;
+      }).join('');
 
       renderDetailChart(w.trackpoints || []);
     }
@@ -621,6 +661,23 @@
       });
     }
 
+    // Seletor de Períodos PMC (Elevate style)
+    function setPmcPeriod(period) {
+      currentPmcPeriod = period;
+
+      const periods = ['all', '1y', '6m', '3m', '2m', '1m'];
+      periods.forEach(p => {
+        const btn = document.getElementById(`btn-pmc-${p}`);
+        if (p === period) {
+          btn.className = 'px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-500 text-slate-950 transition';
+        } else {
+          btn.className = 'px-2.5 py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition';
+        }
+      });
+
+      renderPmcChart();
+    }
+
     function renderPmcChart() {
       if (allWorkouts.length === 0) return;
 
@@ -636,10 +693,12 @@
         dailyTrimp[dStr] = (dailyTrimp[dStr] || 0) + (w.trimp_score || 0);
       });
 
-      const dates = [];
-      const ctlData = [];
-      const atlData = [];
-      const tsbData = [];
+      // Cálculo matemático acumulado histórico contínuo (igual ao Elevate/TrainingPeaks)
+      const fullDates = [];
+      const fullDateObjs = [];
+      const fullCtl = [];
+      const fullAtl = [];
+      const fullTsb = [];
 
       let ctl = 0;
       let atl = 0;
@@ -652,11 +711,31 @@
         atl = atl + (dayTrimp - atl) / 7;
         const tsb = ctl - atl;
 
-        dates.push(d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
-        ctlData.push(ctl.toFixed(1));
-        atlData.push(atl.toFixed(1));
-        tsbData.push(tsb.toFixed(1));
+        fullDateObjs.push(new Date(d));
+        fullDates.push(d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+        fullCtl.push(ctl.toFixed(1));
+        fullAtl.push(atl.toFixed(1));
+        fullTsb.push(tsb.toFixed(1));
       }
+
+      // Corte da janela de exibição conforme período selecionado
+      let startIndex = 0;
+      if (currentPmcPeriod !== 'all') {
+        const cutoff = new Date(today);
+        if (currentPmcPeriod === '1y') cutoff.setFullYear(cutoff.getFullYear() - 1);
+        else if (currentPmcPeriod === '6m') cutoff.setMonth(cutoff.getMonth() - 6);
+        else if (currentPmcPeriod === '3m') cutoff.setMonth(cutoff.getMonth() - 3);
+        else if (currentPmcPeriod === '2m') cutoff.setMonth(cutoff.getMonth() - 2);
+        else if (currentPmcPeriod === '1m') cutoff.setMonth(cutoff.getMonth() - 1);
+
+        const foundIdx = fullDateObjs.findIndex(d => d >= cutoff);
+        if (foundIdx !== -1) startIndex = foundIdx;
+      }
+
+      const displayDates = fullDates.slice(startIndex);
+      const displayCtl = fullCtl.slice(startIndex);
+      const displayAtl = fullAtl.slice(startIndex);
+      const displayTsb = fullTsb.slice(startIndex);
 
       const ctx = document.getElementById('pmcChart').getContext('2d');
       if (pmcChartInstance) pmcChartInstance.destroy();
@@ -700,11 +779,11 @@
       pmcChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: dates,
+          labels: displayDates,
           datasets: [
-            { label: 'Fitness 42', data: ctlData, borderColor: '#38bdf8', borderWidth: 2, tension: 0.2, pointRadius: 0 },
-            { label: 'Fadiga 7', data: atlData, borderColor: '#f43f5e', borderWidth: 1.5, tension: 0.2, pointRadius: 0 },
-            { label: 'Forma', data: tsbData, borderColor: '#fbbf24', backgroundColor: 'rgba(251, 191, 36, 0.08)', borderWidth: 1.5, tension: 0.2, fill: true, pointRadius: 0 }
+            { label: 'Fitness 42', data: displayCtl, borderColor: '#38bdf8', borderWidth: 2, tension: 0.2, pointRadius: 0 },
+            { label: 'Fadiga 7', data: displayAtl, borderColor: '#f43f5e', borderWidth: 1.5, tension: 0.2, pointRadius: 0 },
+            { label: 'Forma', data: displayTsb, borderColor: '#fbbf24', backgroundColor: 'rgba(251, 191, 36, 0.08)', borderWidth: 1.5, tension: 0.2, fill: true, pointRadius: 0 }
           ]
         },
         options: {
