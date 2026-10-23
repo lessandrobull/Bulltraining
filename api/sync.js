@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
-  const API_KEY = '3pcp8m39g3wupqh688l1zcvtf';
-  const ATHLETE_ID = 'i704231';
+  const API_KEY = process.env.INTERVALS_API_KEY;
+  const ATHLETE_ID = process.env.INTERVALS_ATHLETE_ID || 'i704231';
   const SUPABASE_URL = 'https://xttzilpuuqjbztjkeadd.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_uexabKupvCYRAAPqRiETSQ_I01UsSZI';
 
