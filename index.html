@@ -29,7 +29,7 @@
   </style>
 </head>
 
-<body class="bg-slate-950 text-slate-100 h-screen overflow-hidden font-sans flex flex-col">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans pb-10">
 
   <!-- Configuração do Supabase -->
   <script>
@@ -102,7 +102,7 @@
   </div>
 
   <!-- Conteúdo Principal -->
-  <main class="max-w-6xl w-full mx-auto px-2 sm:px-6 py-1.5 flex-1 flex flex-col overflow-hidden">
+  <main class="max-w-6xl mx-auto px-2 sm:px-6 py-2.5 sm:py-3.5 space-y-3 sm:space-y-4">
 
     <div id="statusAlert" class="hidden p-3 rounded-xl text-sm border"></div>
 
@@ -1115,34 +1115,6 @@
         }
       });
     }
-
-    // Gesto de puxar para atualizar (Pull-to-refresh com tela fixa)
-    let touchStartY = 0;
-    let isPulling = false;
-
-    window.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) {
-        touchStartY = e.touches[0].clientY;
-        isPulling = true;
-      }
-    }, { passive: true });
-
-    window.addEventListener('touchmove', (e) => {
-      if (!isPulling) return;
-      const currentY = e.touches[0].clientY;
-      const pullDistance = currentY - touchStartY;
-
-      // Se puxou para baixo mais de 70px a partir do topo
-      if (pullDistance > 70) {
-        isPulling = false;
-        showAlert('Atualizando treinos...');
-        loadWorkouts();
-      }
-    }, { passive: true });
-
-    window.addEventListener('touchend', () => {
-      isPulling = false;
-    }, { passive: true });
 
     loadWorkouts();
   </script>
