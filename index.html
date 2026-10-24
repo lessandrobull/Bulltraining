@@ -102,21 +102,22 @@
   </div>
 
   <!-- Conteúdo Principal -->
-  <main class="max-w-6xl w-full mx-auto px-2 sm:px-6 pt-1 sm:pt-1.5 pb-1 space-y-2 flex-1 overflow-hidden">
+  <main class="max-w-6xl w-full mx-auto px-2 sm:px-6 py-1.5 flex-1 flex flex-col overflow-hidden">
 
     <div id="statusAlert" class="hidden p-3 rounded-xl text-sm border"></div>
 
     <!-- ABA 1: TREINOS -->
-    <section id="tab-workouts" class="space-y-2">
+    <section id="tab-workouts" class="flex-1 flex flex-col overflow-hidden">
       <div id="workoutListContainer"
-        class="bg-slate-900 border border-slate-800 px-2.5 pt-2 pb-2 sm:p-4 rounded-2xl shadow">
-        <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider mb-1.5">Histórico de Atividades
+        class="bg-slate-900 border border-slate-800 px-2.5 py-2 sm:p-4 rounded-2xl shadow flex-1 flex flex-col justify-between overflow-hidden">
+        <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider mb-1 shrink-0">Histórico de
+          Atividades
         </h2>
-        <div id="workoutList" class="space-y-1">
+        <div id="workoutList" class="space-y-1 flex-1 flex flex-col justify-start overflow-hidden">
           <p class="text-slate-500 text-sm">Carregando treinos...</p>
         </div>
         <!-- Paginação de 7 em 7 -->
-        <div id="workoutPagination" class="flex items-center justify-between pt-1.5 mt-1 text-xs">
+        <div id="workoutPagination" class="flex items-center justify-between pt-1 text-xs shrink-0">
           <button id="btnPrevPage" onclick="changeWorkoutPage(-1)"
             class="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition font-semibold">
             Anterior
@@ -1080,6 +1081,34 @@
         }
       });
     }
+
+    // Gesto de puxar para atualizar (Pull-to-refresh com tela fixa)
+    let touchStartY = 0;
+    let isPulling = false;
+
+    window.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        touchStartY = e.touches[0].clientY;
+        isPulling = true;
+      }
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+      if (!isPulling) return;
+      const currentY = e.touches[0].clientY;
+      const pullDistance = currentY - touchStartY;
+
+      // Se puxou para baixo mais de 70px a partir do topo
+      if (pullDistance > 70) {
+        isPulling = false;
+        showAlert('Atualizando treinos...');
+        loadWorkouts();
+      }
+    }, { passive: true });
+
+    window.addEventListener('touchend', () => {
+      isPulling = false;
+    }, { passive: true });
 
     loadWorkouts();
   </script>
