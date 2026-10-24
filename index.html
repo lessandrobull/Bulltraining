@@ -204,71 +204,83 @@
     </section>
 
     <!-- ABA 2: FITNESS & FADIGA -->
-    <section id="tab-pmc" class="hidden flex-1 flex flex-col gap-1.5 overflow-hidden">
-      <!-- Card Superior: Status Atual de Carga (Ocupa o espaço útil restante) -->
-      <div class="bg-slate-900 border border-slate-800 px-2.5 py-2 sm:p-3 rounded-2xl shadow flex-1 flex flex-col justify-between overflow-hidden">
-        <h2 class="text-[11px] sm:text-xs font-bold text-slate-300 uppercase tracking-wider mb-1 shrink-0">STATUS ATUAL DE CARGA</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 flex-1 w-full text-center">
-          <div class="bg-slate-950 p-1.5 rounded-xl border border-slate-800 flex flex-col justify-center items-center">
-            <span class="text-[10px] text-slate-400 font-medium">Fitness (CTL)</span>
-            <p id="statusCtl" class="text-sm sm:text-base font-black text-sky-400 mt-0.5">-</p>
+    <section id="tab-pmc" class="hidden flex-1 flex flex-col overflow-hidden">
+      <!-- Card Externo Único (Estrutura idêntica à tela de detalhes de treino) -->
+      <div class="bg-slate-900 border border-slate-800 p-2.5 sm:p-4 rounded-2xl shadow flex-1 flex flex-col justify-between overflow-hidden gap-2 sm:gap-2.5">
+        
+        <!-- Cabeçalho: Título e Data no padrão exato da tela de treino -->
+        <div class="border-b border-slate-800 pb-1.5 shrink-0">
+          <h2 class="text-xs sm:text-sm font-bold text-slate-100 uppercase tracking-wider">STATUS ATUAL DE CARGA</h2>
+          <p id="statusDate" class="text-[11px] sm:text-xs text-slate-400 font-medium mt-0.5">-</p>
+        </div>
+
+        <!-- 4 Cards Menores: Mesmas classes, paddings e fontes dos cards de métricas do treino -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center shrink-0">
+          <div class="bg-slate-950 p-2 sm:p-2.5 rounded-xl border border-slate-800">
+            <span class="text-xs text-slate-400 font-medium">Fitness (CTL)</span>
+            <p id="statusCtl" class="text-base sm:text-lg font-black text-sky-400 mt-0.5">-</p>
           </div>
-          <div class="bg-slate-950 p-1.5 rounded-xl border border-slate-800 flex flex-col justify-center items-center">
-            <span class="text-[10px] text-slate-400 font-medium">Fadiga (ATL)</span>
-            <p id="statusAtl" class="text-sm sm:text-base font-black text-rose-400 mt-0.5">-</p>
+          <div class="bg-slate-950 p-2 sm:p-2.5 rounded-xl border border-slate-800">
+            <span class="text-xs text-slate-400 font-medium">Fadiga (ATL)</span>
+            <p id="statusAtl" class="text-base sm:text-lg font-black text-rose-400 mt-0.5">-</p>
           </div>
-          <div class="bg-slate-950 p-1.5 rounded-xl border border-slate-800 flex flex-col justify-center items-center">
-            <span class="text-[10px] text-slate-400 font-medium">Forma (TSB)</span>
-            <p id="statusTsb" class="text-sm sm:text-base font-black text-amber-400 mt-0.5">-</p>
+          <div class="bg-slate-950 p-2 sm:p-2.5 rounded-xl border border-slate-800">
+            <span class="text-xs text-slate-400 font-medium">Forma (TSB)</span>
+            <p id="statusTsb" class="text-base sm:text-lg font-black text-amber-400 mt-0.5">-</p>
           </div>
-          <div class="bg-slate-950 p-1.5 rounded-xl border border-slate-800 flex flex-col justify-center items-center">
-            <span class="text-[10px] text-slate-400 font-medium">Zona de Rendimento</span>
+          <div class="bg-slate-950 p-2 sm:p-2.5 rounded-xl border border-slate-800">
+            <span class="text-xs text-slate-400 font-medium">Zona de Rendimento</span>
             <p id="statusZone" class="text-xs sm:text-sm font-bold text-emerald-400 mt-0.5 truncate">-</p>
           </div>
         </div>
-      </div>
 
-      <!-- Card Inferior: Gestão de Desempenho (Mantém tamanho original de destaque) -->
-      <div class="bg-slate-900 border border-slate-800 px-2.5 py-2 sm:p-4 rounded-2xl shadow space-y-1.5 shrink-0 overflow-hidden">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-          <div>
-            <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider">GESTÃO DE DESEMPENHO</h2>
-            <div class="flex items-center gap-3 text-[10px] sm:text-xs whitespace-nowrap mt-0.5">
-              <span class="inline-flex items-center gap-1">
-                <span class="w-2 h-2 rounded-full bg-sky-400 inline-block"></span>
-                <span class="text-slate-300">Fitness 42</span>
-              </span>
-              <span class="inline-flex items-center gap-1">
-                <span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span>
-                <span class="text-slate-300">Fadiga 7</span>
-              </span>
-              <span class="inline-flex items-center gap-1">
-                <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
-                <span class="text-slate-300">Forma</span>
-              </span>
+        <!-- Card Escuro Interno: Gestão de Desempenho (Modelo do card de Zonas Cardíacas) -->
+        <div class="bg-slate-950 p-2.5 sm:p-4 rounded-xl border border-slate-800 flex-1 flex flex-col justify-between overflow-hidden gap-1.5 sm:gap-2">
+          
+          <div class="space-y-1.5 shrink-0">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+              <h3 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider">GESTÃO DE DESEMPENHO</h3>
+              <!-- Legendas com fonte text-xs (12px) restaurada -->
+              <div class="flex items-center gap-3 text-xs whitespace-nowrap">
+                <span class="inline-flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-sky-400 inline-block"></span>
+                  <span class="text-slate-300">Fitness 42</span>
+                </span>
+                <span class="inline-flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span>
+                  <span class="text-slate-300">Fadiga 7</span>
+                </span>
+                <span class="inline-flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
+                  <span class="text-slate-300">Forma</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- 6 Botões de Período em Linha Única com fonte text-xs (12px) restaurada -->
+            <div class="grid grid-cols-6 gap-1 w-full bg-slate-900 p-1 rounded-xl border border-slate-800">
+              <button onclick="setPmcPeriod('1m')" id="btn-pmc-1m"
+                class="w-full py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">1 Mês</button>
+              <button onclick="setPmcPeriod('2m')" id="btn-pmc-2m"
+                class="w-full py-1 text-xs font-semibold rounded-lg bg-emerald-500 text-slate-950 transition text-center truncate">2 Meses</button>
+              <button onclick="setPmcPeriod('3m')" id="btn-pmc-3m"
+                class="w-full py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">3 Meses</button>
+              <button onclick="setPmcPeriod('6m')" id="btn-pmc-6m"
+                class="w-full py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">6 Meses</button>
+              <button onclick="setPmcPeriod('1y')" id="btn-pmc-1y"
+                class="w-full py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">1 Ano</button>
+              <button onclick="setPmcPeriod('all')" id="btn-pmc-all"
+                class="w-full py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">Tudo</button>
             </div>
           </div>
+
+          <!-- Área do Gráfico PMC preenchendo o espaço útil interno restante -->
+          <div class="flex-1 w-full relative min-h-0 pt-0.5">
+            <canvas id="pmcChart"></canvas>
+          </div>
+
         </div>
 
-        <!-- Seletor de Períodos: 6 botões simétricos de mesmo tamanho em 1 linha -->
-        <div class="grid grid-cols-6 gap-1 w-full bg-slate-950 p-1 rounded-xl border border-slate-800">
-          <button onclick="setPmcPeriod('1m')" id="btn-pmc-1m"
-            class="w-full py-1 text-[10px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">1 Mês</button>
-          <button onclick="setPmcPeriod('2m')" id="btn-pmc-2m"
-            class="w-full py-1 text-[10px] sm:text-xs font-semibold rounded-lg bg-emerald-500 text-slate-950 transition text-center truncate">2 Meses</button>
-          <button onclick="setPmcPeriod('3m')" id="btn-pmc-3m"
-            class="w-full py-1 text-[10px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">3 Meses</button>
-          <button onclick="setPmcPeriod('6m')" id="btn-pmc-6m"
-            class="w-full py-1 text-[10px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">6 Meses</button>
-          <button onclick="setPmcPeriod('1y')" id="btn-pmc-1y"
-            class="w-full py-1 text-[10px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">1 Ano</button>
-          <button onclick="setPmcPeriod('all')" id="btn-pmc-all"
-            class="w-full py-1 text-[10px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">Tudo</button>
-        </div>
-
-        <div class="h-60 sm:h-72 w-full relative pt-0.5">
-          <canvas id="pmcChart"></canvas>
-        </div>
       </div>
     </section>
 
@@ -319,9 +331,9 @@
         document.getElementById('workoutDetailContainer').classList.add('hidden');
         document.getElementById('workoutListContainer').classList.remove('hidden');
       } else if (tabId === 'tab-pmc') {
-        renderPmcChart();
+        requestAnimationFrame(() => renderPmcChart());
       } else if (tabId === 'tab-volume') {
-        renderVolumeCharts();
+        requestAnimationFrame(() => renderVolumeCharts());
       }
     }
 
@@ -804,7 +816,7 @@
       });
     }
 
-    // Seletor de Períodos PMC (6 botões simétricos de largura idêntica)
+    // Seletor de Períodos PMC (6 botões simétricos com fonte text-xs de 12px)
     function setPmcPeriod(period) {
       currentPmcPeriod = period;
 
@@ -813,9 +825,9 @@
         const btn = document.getElementById(`btn-pmc-${p}`);
         if (!btn) return;
         if (p === period) {
-          btn.className = 'w-full py-1 text-[10px] sm:text-xs font-semibold rounded-lg bg-emerald-500 text-slate-950 transition text-center truncate';
+          btn.className = 'w-full py-1 text-xs font-semibold rounded-lg bg-emerald-500 text-slate-950 transition text-center truncate';
         } else {
-          btn.className = 'w-full py-1 text-[10px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate';
+          btn.className = 'w-full py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate';
         }
       });
 
@@ -831,7 +843,8 @@
       firstDate.setHours(0, 0, 0, 0);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const lastWorkoutDate = new Date(sorted[sorted.length - 1].start_time);
+      const latestWorkout = sorted[sorted.length - 1];
+      const lastWorkoutDate = new Date(latestWorkout.start_time);
       lastWorkoutDate.setHours(0, 0, 0, 0);
       const targetEndDate = lastWorkoutDate > today ? lastWorkoutDate : today;
 
@@ -867,7 +880,14 @@
         fullTsb.push(tsb.toFixed(1));
       }
 
-      // Atualiza o Card de Diagnóstico do Dia (Status Atual de Carga)
+      // 1. Atualiza a Data no Cabeçalho no mesmo padrão da tela de treino
+      const dt = getWorkoutDateTime(latestWorkout);
+      const elDate = document.getElementById('statusDate');
+      if (elDate) {
+        elDate.textContent = `${dt.dayName}, ${dt.day}/${dt.month}/${dt.year}, ${dt.hours}:${dt.minutes}`;
+      }
+
+      // 2. Atualiza os 4 Cards de Diagnóstico (Status Atual de Carga)
       const currentCtlVal = ctl.toFixed(1);
       const currentAtlVal = atl.toFixed(1);
       const currentTsbVal = tsb.toFixed(1);
@@ -906,6 +926,15 @@
         elZone.className = `text-xs sm:text-sm font-bold ${zoneColor} mt-0.5 truncate`;
       }
 
+      // 3. Blindagem de Renderização: se a aba estiver oculta, não inicializa o canvas em 0x0
+      const tabPmc = document.getElementById('tab-pmc');
+      if (tabPmc && tabPmc.classList.contains('hidden')) {
+        return;
+      }
+
+      const canvas = document.getElementById('pmcChart');
+      if (!canvas) return;
+
       // Corte da janela de exibição conforme período selecionado
       let startIndex = 0;
       if (currentPmcPeriod !== 'all') {
@@ -925,7 +954,7 @@
       const displayAtl = fullAtl.slice(startIndex);
       const displayTsb = fullTsb.slice(startIndex);
 
-      const ctx = document.getElementById('pmcChart').getContext('2d');
+      const ctx = canvas.getContext('2d');
       if (pmcChartInstance) pmcChartInstance.destroy();
 
       const tsbReferenceLinesPlugin = {
