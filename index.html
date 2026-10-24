@@ -204,33 +204,33 @@
     </section>
 
     <!-- ABA 2: FITNESS & FADIGA -->
-    <section id="tab-pmc" class="hidden space-y-1.5">
-      <!-- Card de Diagnóstico do Dia: Status Atual de Carga -->
-      <div class="bg-slate-900 border border-slate-800 px-2.5 py-1.5 sm:p-2.5 rounded-2xl shadow">
-        <h2 class="text-[11px] sm:text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">STATUS ATUAL DE CARGA
-        </h2>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-center">
-          <div class="bg-slate-950 py-1 px-1.5 rounded-xl border border-slate-800">
+    <section id="tab-pmc" class="hidden flex-1 flex flex-col gap-1.5 overflow-hidden">
+      <!-- Card Superior: Status Atual de Carga (Ocupa o espaço útil restante) -->
+      <div class="bg-slate-900 border border-slate-800 px-2.5 py-2 sm:p-3 rounded-2xl shadow flex-1 flex flex-col justify-between overflow-hidden">
+        <h2 class="text-[11px] sm:text-xs font-bold text-slate-300 uppercase tracking-wider mb-1 shrink-0">STATUS ATUAL DE CARGA</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 flex-1 w-full text-center">
+          <div class="bg-slate-950 p-1.5 rounded-xl border border-slate-800 flex flex-col justify-center items-center">
             <span class="text-[10px] text-slate-400 font-medium">Fitness (CTL)</span>
-            <p id="statusCtl" class="text-xs sm:text-sm font-black text-sky-400 mt-0.5">-</p>
+            <p id="statusCtl" class="text-sm sm:text-base font-black text-sky-400 mt-0.5">-</p>
           </div>
-          <div class="bg-slate-950 py-1 px-1.5 rounded-xl border border-slate-800">
+          <div class="bg-slate-950 p-1.5 rounded-xl border border-slate-800 flex flex-col justify-center items-center">
             <span class="text-[10px] text-slate-400 font-medium">Fadiga (ATL)</span>
-            <p id="statusAtl" class="text-xs sm:text-sm font-black text-rose-400 mt-0.5">-</p>
+            <p id="statusAtl" class="text-sm sm:text-base font-black text-rose-400 mt-0.5">-</p>
           </div>
-          <div class="bg-slate-950 py-1 px-1.5 rounded-xl border border-slate-800">
+          <div class="bg-slate-950 p-1.5 rounded-xl border border-slate-800 flex flex-col justify-center items-center">
             <span class="text-[10px] text-slate-400 font-medium">Forma (TSB)</span>
-            <p id="statusTsb" class="text-xs sm:text-sm font-black text-amber-400 mt-0.5">-</p>
+            <p id="statusTsb" class="text-sm sm:text-base font-black text-amber-400 mt-0.5">-</p>
           </div>
-          <div class="bg-slate-950 py-1 px-1.5 rounded-xl border border-slate-800">
+          <div class="bg-slate-950 p-1.5 rounded-xl border border-slate-800 flex flex-col justify-center items-center">
             <span class="text-[10px] text-slate-400 font-medium">Zona de Rendimento</span>
-            <p id="statusZone" class="text-[11px] sm:text-xs font-bold text-emerald-400 mt-0.5 truncate">-</p>
+            <p id="statusZone" class="text-xs sm:text-sm font-bold text-emerald-400 mt-0.5 truncate">-</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-slate-900 border border-slate-800 px-2.5 py-2 sm:p-4 rounded-2xl shadow space-y-1.5">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
+      <!-- Card Inferior: Gestão de Desempenho (Mantém tamanho original de destaque) -->
+      <div class="bg-slate-900 border border-slate-800 px-2.5 py-2 sm:p-4 rounded-2xl shadow space-y-1.5 shrink-0 overflow-hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
           <div>
             <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider">GESTÃO DE DESEMPENHO</h2>
             <div class="flex items-center gap-3 text-[10px] sm:text-xs whitespace-nowrap mt-0.5">
@@ -248,51 +248,45 @@
               </span>
             </div>
           </div>
-
-          <!-- Seletor de Períodos Estilo Elevate -->
-          <div
-            class="flex flex-nowrap items-center gap-0.5 sm:gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 self-start sm:self-auto overflow-x-auto max-w-full">
-            <button onclick="setPmcPeriod('1m')" id="btn-pmc-1m"
-              class="px-1.5 sm:px-2 py-1 text-[11px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition whitespace-nowrap">1
-              Mês</button>
-            <button onclick="setPmcPeriod('2m')" id="btn-pmc-2m"
-              class="px-1.5 sm:px-2 py-1 text-[11px] sm:text-xs font-semibold rounded-lg bg-emerald-500 text-slate-950 transition whitespace-nowrap">2
-              Meses</button>
-            <button onclick="setPmcPeriod('3m')" id="btn-pmc-3m"
-              class="px-1.5 sm:px-2 py-1 text-[11px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition whitespace-nowrap">3
-              Meses</button>
-            <button onclick="setPmcPeriod('6m')" id="btn-pmc-6m"
-              class="px-1.5 sm:px-2 py-1 text-[11px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition whitespace-nowrap">6
-              Meses</button>
-            <button onclick="setPmcPeriod('1y')" id="btn-pmc-1y"
-              class="px-1.5 sm:px-2 py-1 text-[11px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition whitespace-nowrap">1
-              Ano</button>
-            <button onclick="setPmcPeriod('all')" id="btn-pmc-all"
-              class="px-1.5 sm:px-2 py-1 text-[11px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Tudo</button>
-          </div>
         </div>
 
-        <div class="h-52 sm:h-64 w-full relative pt-0.5">
+        <!-- Seletor de Períodos: 6 botões simétricos de mesmo tamanho em 1 linha -->
+        <div class="grid grid-cols-6 gap-1 w-full bg-slate-950 p-1 rounded-xl border border-slate-800">
+          <button onclick="setPmcPeriod('1m')" id="btn-pmc-1m"
+            class="w-full py-1 text-[10px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">1 Mês</button>
+          <button onclick="setPmcPeriod('2m')" id="btn-pmc-2m"
+            class="w-full py-1 text-[10px] sm:text-xs font-semibold rounded-lg bg-emerald-500 text-slate-950 transition text-center truncate">2 Meses</button>
+          <button onclick="setPmcPeriod('3m')" id="btn-pmc-3m"
+            class="w-full py-1 text-[10px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">3 Meses</button>
+          <button onclick="setPmcPeriod('6m')" id="btn-pmc-6m"
+            class="w-full py-1 text-[10px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">6 Meses</button>
+          <button onclick="setPmcPeriod('1y')" id="btn-pmc-1y"
+            class="w-full py-1 text-[10px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">1 Ano</button>
+          <button onclick="setPmcPeriod('all')" id="btn-pmc-all"
+            class="w-full py-1 text-[10px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">Tudo</button>
+        </div>
+
+        <div class="h-60 sm:h-72 w-full relative pt-0.5">
           <canvas id="pmcChart"></canvas>
         </div>
       </div>
     </section>
 
     <!-- ABA 3: VOLUME -->
-    <section id="tab-volume" class="hidden space-y-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bg-slate-900 border border-slate-800 p-3 sm:p-5 rounded-2xl shadow space-y-2.5">
-          <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider">Volume Semanal (km)</h2>
-          <div class="h-60 sm:h-64 w-full relative">
-            <canvas id="weeklyVolumeChart"></canvas>
-          </div>
+    <section id="tab-volume" class="hidden flex-1 flex flex-col gap-1.5 overflow-hidden">
+      <!-- Card Superior: Volume Semanal (50% do espaço útil) -->
+      <div class="bg-slate-900 border border-slate-800 px-2.5 py-2 sm:p-4 rounded-2xl shadow flex-1 flex flex-col overflow-hidden">
+        <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider mb-1 shrink-0">Volume Semanal (km)</h2>
+        <div class="flex-1 w-full relative min-h-0">
+          <canvas id="weeklyVolumeChart"></canvas>
         </div>
+      </div>
 
-        <div class="bg-slate-900 border border-slate-800 p-3 sm:p-5 rounded-2xl shadow space-y-2.5">
-          <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider">Volume Mensal (km)</h2>
-          <div class="h-60 sm:h-64 w-full relative">
-            <canvas id="monthlyVolumeChart"></canvas>
-          </div>
+      <!-- Card Inferior: Volume Mensal (50% do espaço útil) -->
+      <div class="bg-slate-900 border border-slate-800 px-2.5 py-2 sm:p-4 rounded-2xl shadow flex-1 flex flex-col overflow-hidden">
+        <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider mb-1 shrink-0">Volume Mensal (km)</h2>
+        <div class="flex-1 w-full relative min-h-0">
+          <canvas id="monthlyVolumeChart"></canvas>
         </div>
       </div>
     </section>
@@ -810,7 +804,7 @@
       });
     }
 
-    // Seletor de Períodos PMC (Elevate style)
+    // Seletor de Períodos PMC (6 botões simétricos de largura idêntica)
     function setPmcPeriod(period) {
       currentPmcPeriod = period;
 
@@ -819,9 +813,9 @@
         const btn = document.getElementById(`btn-pmc-${p}`);
         if (!btn) return;
         if (p === period) {
-          btn.className = 'px-1.5 sm:px-2 py-1 text-[11px] sm:text-xs font-semibold rounded-lg bg-emerald-500 text-slate-950 transition whitespace-nowrap';
+          btn.className = 'w-full py-1 text-[10px] sm:text-xs font-semibold rounded-lg bg-emerald-500 text-slate-950 transition text-center truncate';
         } else {
-          btn.className = 'px-1.5 sm:px-2 py-1 text-[11px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition whitespace-nowrap';
+          btn.className = 'w-full py-1 text-[10px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate';
         }
       });
 
