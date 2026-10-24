@@ -16,6 +16,17 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* Oculta a barra de rolagem visual mantendo a rolagem ativa */
+    #workoutDetailContainer::-webkit-scrollbar {
+      display: none;
+    }
+
+    #workoutDetailContainer {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
 </head>
 
 <body class="bg-slate-950 text-slate-100 h-screen overflow-hidden font-sans flex flex-col">
@@ -30,7 +41,7 @@
   <!-- Cabeçalho Compacto -->
   <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 px-3 py-2 sm:px-6 sm:py-2.5 shadow-md">
     <div class="max-w-6xl mx-auto flex justify-between items-center gap-2">
-      <div class="flex items-center gap-0">
+      <div class="flex items-center gap-1">
         <img src="icon-64.png" alt="Bull Training" style="height: 75px; width: 75px;"
           class="rounded-lg shrink-0 shadow">
         <div class="flex flex-col justify-center">
@@ -97,22 +108,22 @@
 
     <!-- ABA 1: TREINOS -->
     <section id="tab-workouts" class="space-y-2">
-      <div id="workoutListContainer" class="bg-slate-900 border border-slate-800 p-2.5 sm:p-4 rounded-2xl shadow">
-        <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider mb-2">Histórico de Atividades
+      <div id="workoutListContainer"
+        class="bg-slate-900 border border-slate-800 px-2.5 pt-2 pb-2 sm:p-4 rounded-2xl shadow">
+        <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider mb-1.5">Histórico de Atividades
         </h2>
-        <div id="workoutList" class="space-y-1.5">
+        <div id="workoutList" class="space-y-1">
           <p class="text-slate-500 text-sm">Carregando treinos...</p>
         </div>
-        <!-- Paginação de 6 em 6 -->
-        <div id="workoutPagination"
-          class="flex items-center justify-between pt-3 mt-3 border-t border-slate-800/80 text-xs">
+        <!-- Paginação de 7 em 7 -->
+        <div id="workoutPagination" class="flex items-center justify-between pt-1.5 mt-1 text-xs">
           <button id="btnPrevPage" onclick="changeWorkoutPage(-1)"
-            class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition font-semibold">
+            class="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition font-semibold">
             Anterior
           </button>
           <span id="pageIndicator" class="text-slate-400 font-medium text-xs">Página 1</span>
           <button id="btnNextPage" onclick="changeWorkoutPage(1)"
-            class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition font-semibold">
+            class="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition font-semibold">
             Próximo
           </button>
         </div>
@@ -120,8 +131,8 @@
 
       <!-- Detalhes do Treino -->
       <div id="workoutDetailContainer"
-        class="bg-slate-900 border border-slate-800 p-2.5 sm:p-4 rounded-2xl shadow space-y-3 hidden overflow-y-auto max-h-[calc(100vh-120px)] pb-6">
-        <div class="border-b border-slate-800 pb-2">
+        class="bg-slate-900 border border-slate-800 p-2.5 sm:p-4 rounded-2xl shadow space-y-2 hidden overflow-y-auto max-h-[calc(100vh-120px)] pb-6">
+        <div class="border-b border-slate-800 pb-1">
           <div class="flex items-center justify-between gap-2">
             <div class="min-w-0 flex-1">
               <h3 id="workoutLocation" class="text-xs sm:text-base font-bold text-slate-100 truncate">-</h3>
@@ -192,35 +203,36 @@
     </section>
 
     <!-- ABA 2: FITNESS & FADIGA -->
-    <section id="tab-pmc" class="hidden space-y-2">
+    <section id="tab-pmc" class="hidden space-y-1.5">
       <!-- Card de Diagnóstico do Dia: Status Atual de Carga -->
-      <div class="bg-slate-900 border border-slate-800 p-2.5 sm:p-3 rounded-2xl shadow">
-        <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider mb-2">STATUS ATUAL DE CARGA</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-          <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
-            <span class="text-[11px] text-slate-400 font-medium">Fitness (CTL)</span>
-            <p id="statusCtl" class="text-sm sm:text-base font-black text-sky-400 mt-0.5">-</p>
+      <div class="bg-slate-900 border border-slate-800 px-2.5 py-1.5 sm:p-2.5 rounded-2xl shadow">
+        <h2 class="text-[11px] sm:text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">STATUS ATUAL DE CARGA
+        </h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-center">
+          <div class="bg-slate-950 py-1 px-1.5 rounded-xl border border-slate-800">
+            <span class="text-[10px] text-slate-400 font-medium">Fitness (CTL)</span>
+            <p id="statusCtl" class="text-xs sm:text-sm font-black text-sky-400 mt-0.5">-</p>
           </div>
-          <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
-            <span class="text-[11px] text-slate-400 font-medium">Fadiga (ATL)</span>
-            <p id="statusAtl" class="text-sm sm:text-base font-black text-rose-400 mt-0.5">-</p>
+          <div class="bg-slate-950 py-1 px-1.5 rounded-xl border border-slate-800">
+            <span class="text-[10px] text-slate-400 font-medium">Fadiga (ATL)</span>
+            <p id="statusAtl" class="text-xs sm:text-sm font-black text-rose-400 mt-0.5">-</p>
           </div>
-          <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
-            <span class="text-[11px] text-slate-400 font-medium">Forma (TSB)</span>
-            <p id="statusTsb" class="text-sm sm:text-base font-black text-amber-400 mt-0.5">-</p>
+          <div class="bg-slate-950 py-1 px-1.5 rounded-xl border border-slate-800">
+            <span class="text-[10px] text-slate-400 font-medium">Forma (TSB)</span>
+            <p id="statusTsb" class="text-xs sm:text-sm font-black text-amber-400 mt-0.5">-</p>
           </div>
-          <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
-            <span class="text-[11px] text-slate-400 font-medium">Zona de Rendimento</span>
-            <p id="statusZone" class="text-xs sm:text-sm font-bold text-emerald-400 mt-0.5 truncate">-</p>
+          <div class="bg-slate-950 py-1 px-1.5 rounded-xl border border-slate-800">
+            <span class="text-[10px] text-slate-400 font-medium">Zona de Rendimento</span>
+            <p id="statusZone" class="text-[11px] sm:text-xs font-bold text-emerald-400 mt-0.5 truncate">-</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-slate-900 border border-slate-800 p-3 sm:p-5 rounded-2xl shadow space-y-3">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+      <div class="bg-slate-900 border border-slate-800 px-2.5 py-2 sm:p-4 rounded-2xl shadow space-y-1.5">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
           <div>
             <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider">GESTÃO DE DESEMPENHO</h2>
-            <div class="flex items-center gap-3 text-[11px] sm:text-xs whitespace-nowrap mt-1">
+            <div class="flex items-center gap-3 text-[10px] sm:text-xs whitespace-nowrap mt-0.5">
               <span class="inline-flex items-center gap-1">
                 <span class="w-2 h-2 rounded-full bg-sky-400 inline-block"></span>
                 <span class="text-slate-300">Fitness 42</span>
@@ -259,7 +271,7 @@
           </div>
         </div>
 
-        <div class="h-80 sm:h-96 w-full relative pt-1">
+        <div class="h-52 sm:h-64 w-full relative pt-0.5">
           <canvas id="pmcChart"></canvas>
         </div>
       </div>
@@ -311,6 +323,10 @@
       if (tabId === 'tab-workouts') {
         document.getElementById('workoutDetailContainer').classList.add('hidden');
         document.getElementById('workoutListContainer').classList.remove('hidden');
+      } else if (tabId === 'tab-pmc') {
+        renderPmcChart();
+      } else if (tabId === 'tab-volume') {
+        renderVolumeCharts();
       }
     }
 
@@ -812,17 +828,22 @@
     }
 
     function renderPmcChart() {
-      if (allWorkouts.length === 0) return;
+      const validWorkouts = (allWorkouts || []).filter(w => w.start_time && !isNaN(new Date(w.start_time).getTime()));
+      if (validWorkouts.length === 0) return;
 
-      const sorted = [...allWorkouts].sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
+      const sorted = [...validWorkouts].sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
       const firstDate = new Date(sorted[0].start_time);
       firstDate.setHours(0, 0, 0, 0);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+      const lastWorkoutDate = new Date(sorted[sorted.length - 1].start_time);
+      lastWorkoutDate.setHours(0, 0, 0, 0);
+      const targetEndDate = lastWorkoutDate > today ? lastWorkoutDate : today;
 
       const dailyTrimp = {};
       sorted.forEach(w => {
-        const dStr = new Date(w.start_time).toISOString().split('T')[0];
+        const d = new Date(w.start_time);
+        const dStr = d.toISOString().split('T')[0];
         dailyTrimp[dStr] = (dailyTrimp[dStr] || 0) + (w.trimp_score || 0);
       });
 
@@ -836,7 +857,7 @@
       let ctl = 0;
       let atl = 0;
 
-      for (let d = new Date(firstDate); d <= today; d.setDate(d.getDate() + 1)) {
+      for (let d = new Date(firstDate); d <= targetEndDate; d.setDate(d.getDate() + 1)) {
         const dStr = d.toISOString().split('T')[0];
         const dayTrimp = dailyTrimp[dStr] || 0;
 
@@ -915,8 +936,8 @@
       const tsbReferenceLinesPlugin = {
         id: 'tsbReferenceLines',
         beforeDraw(chart) {
+          if (!chart.chartArea || !chart.scales || !chart.scales.y) return;
           const { ctx, chartArea: { left, right, top, bottom }, scales: { y } } = chart;
-          if (!y) return;
 
           const amberColor = 'rgba(251, 191, 36, 0.45)';
           const refLines = [
