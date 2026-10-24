@@ -1,13 +1,23 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel de Treinos</title>
+  <title>Bull Training</title>
+  <link rel="icon" type="image/png" sizes="64x64" href="icon-64.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Bull Training">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans pb-10">
 
   <!-- Configuração do Supabase -->
@@ -20,83 +30,112 @@
   <!-- Cabeçalho Compacto -->
   <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 px-3 py-2 sm:px-6 sm:py-2.5 shadow-md">
     <div class="max-w-6xl mx-auto flex justify-between items-center gap-2">
-      <div>
-        <h1 class="text-lg sm:text-xl font-bold tracking-tight text-emerald-400">Hub de Treinos</h1>
-        <p class="text-[11px] sm:text-xs text-slate-400">Gestão de Carga & Evolução</p>
+      <div class="flex items-center gap-0">
+        <img src="icon-64.png" alt="Bull Training" style="height: 75px; width: 75px;" class="rounded-lg shrink-0 shadow">
+        <div class="flex flex-col justify-center">
+          <h1 class="text-lg sm:text-xl font-bold tracking-tight text-emerald-400 leading-tight">Hub de Treinos</h1>
+          <p class="text-[11px] sm:text-xs text-slate-400 leading-tight mt-0.5">Gestão de Carga & Evolução</p>
+        </div>
       </div>
 
       <div class="flex items-center gap-1.5 sm:gap-2">
-        <!-- Botão de Sincronização Manual sob Demanda -->
-        <button id="btnSync" onclick="manualSync()" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 p-1.5 sm:p-2 rounded-xl border border-slate-700 transition shadow flex items-center gap-1 text-xs font-semibold" title="Sincronizar com Intervals.icu">
-          <svg id="syncIcon" class="w-4 h-4 sm:w-5 sm:h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-          </svg>
-          <span class="hidden sm:inline">Sincronizar</span>
-        </button>
-
-        <button onclick="openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-1.5 sm:p-2 rounded-xl border border-slate-700 transition shadow" title="Configurações de Frequência Cardíaca">
+        <button onclick="openSettingsModal()"
+          class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-1.5 sm:p-2 rounded-xl border border-slate-700 transition shadow"
+          title="Configurações de Frequência Cardíaca">
           <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+            </path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
+            </path>
           </svg>
         </button>
       </div>
     </div>
 
     <!-- Navegação por Abas -->
-    <div class="max-w-6xl mx-auto flex gap-6 mt-1.5 sm:mt-2 border-t border-slate-800/60 pt-1.5 text-xs sm:text-sm font-medium">
-      <button onclick="switchTab('tab-workouts')" id="btn-tab-workouts" class="text-emerald-400 border-b-2 border-emerald-400 pb-0.5">Treinos</button>
-      <button onclick="switchTab('tab-pmc')" id="btn-tab-pmc" class="text-slate-400 hover:text-slate-200 pb-0.5">Fitness & Fadiga</button>
-      <button onclick="switchTab('tab-volume')" id="btn-tab-volume" class="text-slate-400 hover:text-slate-200 pb-0.5">Volume</button>
+    <div
+      class="max-w-6xl mx-auto flex gap-6 mt-1.5 sm:mt-2 border-t border-slate-800/60 pt-1.5 text-xs sm:text-sm font-medium">
+      <button onclick="switchTab('tab-workouts')" id="btn-tab-workouts"
+        class="text-emerald-400 border-b-2 border-emerald-400 pb-0.5">Treinos</button>
+      <button onclick="switchTab('tab-pmc')" id="btn-tab-pmc" class="text-slate-400 hover:text-slate-200 pb-0.5">Fitness
+        & Fadiga</button>
+      <button onclick="switchTab('tab-volume')" id="btn-tab-volume"
+        class="text-slate-400 hover:text-slate-200 pb-0.5">Volume</button>
     </div>
   </header>
 
   <!-- Modal de Configuração de FC -->
-  <div id="settingsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+  <div id="settingsModal"
+    class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl">
       <h3 class="text-sm font-bold text-slate-100">Zonas e Frequência Cardíaca</h3>
       <div>
         <label class="text-xs text-slate-400 block mb-1">FC de Repouso (bpm)</label>
-        <input type="number" id="inputHrRest" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
+        <input type="number" id="inputHrRest"
+          class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
       </div>
       <div>
         <label class="text-xs text-slate-400 block mb-1">FC Máxima (bpm)</label>
-        <input type="number" id="inputHrMax" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
+        <input type="number" id="inputHrMax"
+          class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
       </div>
       <div class="flex justify-end gap-2 pt-2">
-        <button onclick="closeSettingsModal()" class="px-4 py-2 text-xs rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300">Cancelar</button>
-        <button onclick="saveSettings()" class="px-4 py-2 text-xs font-semibold rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950">Salvar</button>
+        <button onclick="closeSettingsModal()"
+          class="px-4 py-2 text-xs rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300">Cancelar</button>
+        <button onclick="saveSettings()"
+          class="px-4 py-2 text-xs font-semibold rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950">Salvar</button>
       </div>
     </div>
   </div>
 
   <!-- Conteúdo Principal -->
-  <main class="max-w-6xl mx-auto px-2 sm:px-6 py-2.5 sm:py-3.5 space-y-3 sm:space-y-4">
+  <main class="max-w-6xl mx-auto px-2 sm:px-6 pt-1 sm:pt-1.5 pb-8 space-y-2">
 
     <div id="statusAlert" class="hidden p-3 rounded-xl text-sm border"></div>
 
     <!-- ABA 1: TREINOS -->
-    <section id="tab-workouts" class="space-y-4">
-      <div id="workoutListContainer" class="bg-slate-900 border border-slate-800 p-3 sm:p-5 rounded-2xl shadow">
-        <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider mb-3">Histórico de Atividades</h2>
-        <div id="workoutList" class="space-y-2">
+    <section id="tab-workouts" class="space-y-2">
+      <div id="workoutListContainer" class="bg-slate-900 border border-slate-800 p-2.5 sm:p-4 rounded-2xl shadow">
+        <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider mb-2">Histórico de Atividades
+        </h2>
+        <div id="workoutList" class="space-y-1.5">
           <p class="text-slate-500 text-sm">Carregando treinos...</p>
+        </div>
+        <!-- Paginação de 6 em 6 -->
+        <div id="workoutPagination"
+          class="flex items-center justify-between pt-3 mt-3 border-t border-slate-800/80 text-xs">
+          <button id="btnPrevPage" onclick="changeWorkoutPage(-1)"
+            class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition font-semibold">
+            Anterior
+          </button>
+          <span id="pageIndicator" class="text-slate-400 font-medium text-xs">Página 1</span>
+          <button id="btnNextPage" onclick="changeWorkoutPage(1)"
+            class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition font-semibold">
+            Próximo
+          </button>
         </div>
       </div>
 
       <!-- Detalhes do Treino -->
-      <div id="workoutDetailContainer" class="bg-slate-900 border border-slate-800 p-3 sm:p-5 rounded-2xl shadow space-y-4 hidden">
-        <div class="border-b border-slate-800 pb-2.5">
+      <div id="workoutDetailContainer"
+        class="bg-slate-900 border border-slate-800 p-2.5 sm:p-4 rounded-2xl shadow space-y-3 hidden">
+        <div class="border-b border-slate-800 pb-2">
           <div class="flex items-center justify-between gap-2">
             <div class="min-w-0 flex-1">
               <h3 id="workoutLocation" class="text-xs sm:text-base font-bold text-slate-100 truncate">-</h3>
               <p id="workoutDate" class="text-[11px] sm:text-xs text-slate-400 font-medium mt-0.5">-</p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
-              <span id="workoutTrimp" class="text-[11px] sm:text-xs font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-slate-800 text-slate-300 whitespace-nowrap">-</span>
-              <button onclick="deleteCurrentWorkout()" class="text-slate-500 hover:text-rose-400 p-1 rounded-lg hover:bg-rose-950/30 transition" title="Excluir treino permanentemente deste painel">
+              <span id="workoutTrimp"
+                class="text-[11px] sm:text-xs font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-slate-800 text-slate-300 whitespace-nowrap">-</span>
+              <button onclick="deleteCurrentWorkout()"
+                class="text-slate-500 hover:text-rose-400 p-1 rounded-lg hover:bg-rose-950/30 transition"
+                title="Excluir treino permanentemente deste painel">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                  </path>
                 </svg>
               </button>
             </div>
@@ -124,7 +163,8 @@
 
         <!-- Distribuição por Zonas Estilo Garmin Connect -->
         <div class="bg-slate-950 p-3.5 sm:p-4 rounded-xl border border-slate-800 space-y-2.5">
-          <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Distribuição de Tempo por Zonas</span>
+          <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Distribuição de Tempo por
+            Zonas</span>
           <div id="zonesBreakdown" class="space-y-2 pt-1"></div>
         </div>
 
@@ -173,13 +213,22 @@
           </div>
 
           <!-- Seletor de Períodos Estilo Elevate -->
-          <div class="flex flex-wrap items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 self-start sm:self-auto">
-            <button onclick="setPmcPeriod('all')" id="btn-pmc-all" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-500 text-slate-950 transition">Tudo</button>
-            <button onclick="setPmcPeriod('1y')" id="btn-pmc-1y" class="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition">1 Ano</button>
-            <button onclick="setPmcPeriod('6m')" id="btn-pmc-6m" class="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition">6 Meses</button>
-            <button onclick="setPmcPeriod('3m')" id="btn-pmc-3m" class="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition">3 Meses</button>
-            <button onclick="setPmcPeriod('2m')" id="btn-pmc-2m" class="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition">2 Meses</button>
-            <button onclick="setPmcPeriod('1m')" id="btn-pmc-1m" class="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition">1 Mês</button>
+          <div
+            class="flex flex-nowrap items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 self-start sm:self-auto overflow-x-auto max-w-full">
+            <button onclick="setPmcPeriod('2m')" id="btn-pmc-2m"
+              class="px-2 sm:px-2.5 py-1 text-[11px] sm:text-xs font-semibold rounded-lg bg-emerald-500 text-slate-950 transition whitespace-nowrap">2
+              Meses</button>
+            <button onclick="setPmcPeriod('3m')" id="btn-pmc-3m"
+              class="px-2 sm:px-2.5 py-1 text-[11px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition whitespace-nowrap">3
+              Meses</button>
+            <button onclick="setPmcPeriod('6m')" id="btn-pmc-6m"
+              class="px-2 sm:px-2.5 py-1 text-[11px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition whitespace-nowrap">6
+              Meses</button>
+            <button onclick="setPmcPeriod('1y')" id="btn-pmc-1y"
+              class="px-2 sm:px-2.5 py-1 text-[11px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition whitespace-nowrap">1
+              Ano</button>
+            <button onclick="setPmcPeriod('all')" id="btn-pmc-all"
+              class="px-2 sm:px-2.5 py-1 text-[11px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Tudo</button>
           </div>
         </div>
 
@@ -219,7 +268,9 @@
 
     let userHrRest = 50;
     let userHrMax = 185;
-    let currentPmcPeriod = 'all';
+    let currentPmcPeriod = '2m';
+    let currentWorkoutPage = 1;
+    const WORKOUTS_PER_PAGE = 6;
 
     function switchTab(tabId) {
       ['tab-workouts', 'tab-pmc', 'tab-volume'].forEach(id => {
@@ -355,11 +406,11 @@
       await fetchWorkoutsFromDB();
     }
 
-    // Carregamento ultrarrápido: lê do Supabase diretamente sem travar a tela
+    // Carregamento ultrarrápido: busca apenas os campos leves (sem matrizes pesadas de trackpoints)
     async function fetchWorkoutsFromDB() {
       const { data, error } = await supabaseClient
         .from('workouts')
-        .select('*')
+        .select('id, start_time, sport, distance_meters, duration_seconds, avg_heart_rate, max_heart_rate, trimp_score, laps, is_deleted')
         .order('start_time', { ascending: false });
 
       if (error) {
@@ -374,46 +425,44 @@
       renderVolumeCharts();
     }
 
-    async function loadWorkouts() {
-      await loadSettings();
-      await fetchWorkoutsFromDB();
-    }
-
-    // Sincronização disparada sob demanda pelo botão no topo
-    async function manualSync() {
-      const syncBtn = document.getElementById('btnSync');
-      const syncIcon = document.getElementById('syncIcon');
-      syncIcon.classList.add('animate-spin');
-      syncBtn.disabled = true;
-
-      showAlert('Verificando atualizações no Intervals.icu...');
-
+    // Sincronização automática em segundo plano sem travar a interface
+    async function autoSyncInBackground() {
       try {
         const syncRes = await fetch('/api/sync');
         const syncData = await syncRes.json();
-        if (syncData.synced > 0 || syncData.atualizadosComPaceOficial > 0 || syncData.antigosAtualizadosComPace > 0) {
-          showAlert(`Sincronização concluída! Novos treinos atualizados.`);
+        if (syncData.novosSincronizados > 0 || syncData.antigosAtualizadosComPace > 0) {
           await fetchWorkoutsFromDB();
-        } else {
-          showAlert('Seus treinos já estão 100% atualizados.');
         }
       } catch (e) {
-        console.error('Erro na sincronização:', e);
-        showAlert('Não foi possível sincronizar agora. Verifique a conexão.', true);
-      } finally {
-        syncIcon.classList.remove('animate-spin');
-        syncBtn.disabled = false;
+        console.warn('Verificação em background:', e);
       }
+    }
+
+    async function loadWorkouts() {
+      await loadSettings();
+      await fetchWorkoutsFromDB();
+      // Dispara a checagem no Intervals.icu em background de forma transparente
+      autoSyncInBackground();
     }
 
     function renderWorkoutList() {
       const listEl = document.getElementById('workoutList');
       if (allWorkouts.length === 0) {
-        listEl.innerHTML = `<p class="text-slate-500 text-sm p-2">Nenhum treino encontrado. Clique no botão "Sincronizar" acima para puxar os dados.</p>`;
+        listEl.innerHTML = `<p class="text-slate-500 text-sm p-2">Nenhum treino encontrado.</p>`;
+        document.getElementById('workoutPagination').classList.add('hidden');
         return;
       }
 
-      listEl.innerHTML = allWorkouts.map(w => {
+      document.getElementById('workoutPagination').classList.remove('hidden');
+
+      const totalPages = Math.ceil(allWorkouts.length / WORKOUTS_PER_PAGE) || 1;
+      if (currentWorkoutPage > totalPages) currentWorkoutPage = totalPages;
+      if (currentWorkoutPage < 1) currentWorkoutPage = 1;
+
+      const startIndex = (currentWorkoutPage - 1) * WORKOUTS_PER_PAGE;
+      const pageWorkouts = allWorkouts.slice(startIndex, startIndex + WORKOUTS_PER_PAGE);
+
+      listEl.innerHTML = pageWorkouts.map(w => {
         const dt = getWorkoutDateTime(w);
         const sportName = translateSport(w.sport);
         const km = ((w.distance_meters || 0) / 1000).toFixed(2);
@@ -421,11 +470,11 @@
         const trimpVal = Math.round(w.trimp_score || 0);
 
         return `
-          <button onclick="openWorkoutDetail('${w.id}')" class="w-full text-left p-3 sm:p-4 rounded-xl bg-slate-950/70 hover:bg-slate-800 border border-slate-800/80 transition flex items-center justify-between gap-2 group">
+          <button onclick="openWorkoutDetail('${w.id}')" class="w-full text-left p-2 sm:p-3 rounded-xl bg-slate-950/70 hover:bg-slate-800 border border-slate-800/80 transition flex items-center justify-between gap-2 group">
             <div class="min-w-0 flex-1">
               <p class="text-xs sm:text-sm font-semibold text-slate-200 group-hover:text-emerald-400 transition truncate">${sportName}, Indaiatuba, Brasil</p>
-              <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5 font-medium">${dt.dayName}, ${dt.day}/${dt.month}/${dt.year}, ${dt.hours}:${dt.minutes}</p>
-              <div class="text-[11px] sm:text-xs text-emerald-400 font-bold mt-1 flex flex-wrap items-center gap-x-1.5">
+              <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5 font-medium">${dt.dayName}, ${dt.day}/${dt.month}/${dt.year}, ${dt.hours}:${dt.minutes}</p>
+              <div class="text-[11px] sm:text-xs text-emerald-400 font-bold mt-0.5 flex flex-wrap items-center gap-x-1.5">
                 <span class="whitespace-nowrap">${km} km</span>
                 <span class="text-slate-500">•</span>
                 <span class="text-slate-300 whitespace-nowrap">${pace}</span>
@@ -439,9 +488,23 @@
           </button>
         `;
       }).join('');
+
+      // Atualiza o estado dos botões da paginação
+      document.getElementById('pageIndicator').textContent = `Página ${currentWorkoutPage} de ${totalPages}`;
+      document.getElementById('btnPrevPage').disabled = (currentWorkoutPage === 1);
+      document.getElementById('btnNextPage').disabled = (currentWorkoutPage === totalPages);
     }
 
-    function openWorkoutDetail(id) {
+    function changeWorkoutPage(direction) {
+      const totalPages = Math.ceil(allWorkouts.length / WORKOUTS_PER_PAGE) || 1;
+      const targetPage = currentWorkoutPage + direction;
+      if (targetPage >= 1 && targetPage <= totalPages) {
+        currentWorkoutPage = targetPage;
+        renderWorkoutList();
+      }
+    }
+
+    async function openWorkoutDetail(id) {
       const w = allWorkouts.find(item => item.id === id);
       if (!w) return;
       currentWorkout = w;
@@ -460,15 +523,30 @@
       document.getElementById('detPace').textContent = formatPace(w.duration_seconds, w.distance_meters);
       document.getElementById('detHr').textContent = `${w.avg_heart_rate || '-'} / ${w.max_heart_rate || '-'} bpm`;
 
+      // Se os trackpoints deste treino ainda não foram carregados, baixa apenas os dele
+      if (!w.trackpoints || w.trackpoints.length === 0) {
+        const { data } = await supabaseClient
+          .from('workouts')
+          .select('trackpoints')
+          .eq('id', id)
+          .single();
+        if (data && data.trackpoints) {
+          w.trackpoints = data.trackpoints;
+        }
+      }
+
       renderZonesBreakdown(w.trackpoints || []);
 
       const splitsBody = document.getElementById('splitsTableBody');
-      const laps = w.laps || [];
+      const rawLaps = w.laps || [];
+      // Filtra voltas residuais espúrias (com 5 segundos ou menos)
+      const laps = rawLaps.filter(lap => (lap.seconds || 0) > 5);
+
       splitsBody.innerHTML = laps.map((lap, idx) => {
         const lapPaceStr = lap.pace ? `${formatTime(lap.pace)} /km` : formatPace(lap.seconds, lap.meters);
         return `
           <tr class="hover:bg-slate-800/40 text-slate-300">
-            <td class="py-2 font-semibold text-slate-200">${lap.lap || (idx + 1)}</td>
+            <td class="py-2 font-semibold text-slate-200">${idx + 1}</td>
             <td class="py-2">${formatTime(lap.seconds)}</td>
             <td class="py-2 font-bold text-emerald-400">${lapPaceStr}</td>
             <td class="py-2">${lap.avgHr || '-'} bpm</td>
@@ -529,14 +607,38 @@
       }).join('');
     }
 
+    // Função auxiliar para suavizar curvas através de média móvel centrada
+    function smoothSeries(arr, windowSize = 5) {
+      const half = Math.floor(windowSize / 2);
+      return arr.map((val, idx) => {
+        if (val === null || val === undefined || isNaN(val)) return null;
+        let sum = 0;
+        let count = 0;
+        for (let i = Math.max(0, idx - half); i <= Math.min(arr.length - 1, idx + half); i++) {
+          const v = arr[i];
+          if (v !== null && v !== undefined && !isNaN(v)) {
+            sum += v;
+            count++;
+          }
+        }
+        return count > 0 ? (sum / count) : val;
+      });
+    }
+
     function renderDetailChart(trackpoints) {
       const ctx = document.getElementById('workoutDetailChart').getContext('2d');
       if (detailChartInstance) detailChartInstance.destroy();
 
       const labels = trackpoints.map(tp => `${(tp.dist / 1000).toFixed(2)}k`);
-      const hrData = trackpoints.map(tp => tp.hr);
-      const altData = trackpoints.map(tp => tp.alt);
-      const paceData = trackpoints.map(tp => tp.pace || null);
+
+      // Aplica suavização com janelas proporcionais à volatilidade de cada métrica
+      const rawHr = trackpoints.map(tp => tp.hr);
+      const rawAlt = trackpoints.map(tp => tp.alt);
+      const rawPace = trackpoints.map(tp => tp.pace || null);
+
+      const hrData = smoothSeries(rawHr, 5);       // Suaviza pequenas oscilações de pulso
+      const altData = smoothSeries(rawAlt, 7);     // Remove degraus barométricos
+      const paceData = smoothSeries(rawPace, 9);    // Filtra ruído severo de GPS instantâneo
 
       const bounds = getZoneBoundaries();
       const zoneTicks = [bounds.z1Max, bounds.z2Max, bounds.z3Max, bounds.z4Max, bounds.z5aMax, bounds.z5bMax];
@@ -545,8 +647,8 @@
       let minPace = 240;
       let maxPace = 480;
       if (validPaces.length > 0) {
-        minPace = Math.max(120, Math.min(...validPaces) - 20);
-        maxPace = Math.min(720, Math.max(...validPaces) + 20);
+        minPace = Math.max(120, Math.min(...validPaces) - 15);
+        maxPace = Math.min(720, Math.max(...validPaces) + 15);
       }
 
       detailChartInstance = new Chart(ctx, {
@@ -559,8 +661,9 @@
               data: hrData,
               borderColor: '#f43f5e',
               yAxisID: 'yHr',
-              borderWidth: 1.8,
-              tension: 0.2,
+              borderWidth: 2,
+              tension: 0.4,
+              cubicInterpolationMode: 'monotone',
               pointRadius: 0
             },
             {
@@ -568,8 +671,9 @@
               data: paceData,
               borderColor: '#10b981',
               yAxisID: 'yPace',
-              borderWidth: 1.6,
-              tension: 0.2,
+              borderWidth: 2,
+              tension: 0.4,
+              cubicInterpolationMode: 'monotone',
               pointRadius: 0,
               spanGaps: true
             },
@@ -579,8 +683,9 @@
               borderColor: '#38bdf8',
               backgroundColor: 'rgba(56, 189, 248, 0.08)',
               yAxisID: 'yAlt',
-              borderWidth: 1.5,
-              tension: 0.2,
+              borderWidth: 1.8,
+              tension: 0.4,
+              cubicInterpolationMode: 'monotone',
               fill: true,
               pointRadius: 0
             }
@@ -602,7 +707,7 @@
               },
               ticks: {
                 color: '#f43f5e',
-                callback: function(value) {
+                callback: function (value) {
                   if (value === bounds.z1Max) return `Z1 (${bounds.z1Max})`;
                   if (value === bounds.z2Max) return `Z2 (${bounds.z2Max})`;
                   if (value === bounds.z3Max) return `Z3 (${bounds.z3Max})`;
@@ -623,7 +728,7 @@
               grid: { display: false },
               ticks: {
                 color: '#10b981',
-                callback: function(val) {
+                callback: function (val) {
                   const m = Math.floor(val / 60);
                   const s = Math.round(val % 60);
                   return `${m}:${s.toString().padStart(2, '0')}`;
@@ -641,7 +746,7 @@
             legend: { labels: { color: '#94a3b8', boxWidth: 12 } },
             tooltip: {
               callbacks: {
-                label: function(context) {
+                label: function (context) {
                   const label = context.dataset.label || '';
                   const val = context.parsed.y;
                   if (val === null || val === undefined) return `${label}: -`;
@@ -650,7 +755,7 @@
                     const s = Math.round(val % 60);
                     return `${label}: ${m}:${s.toString().padStart(2, '0')} /km`;
                   }
-                  if (context.dataset.yAxisID === 'yHr') return `${label}: ${val} bpm`;
+                  if (context.dataset.yAxisID === 'yHr') return `${label}: ${Math.round(val)} bpm`;
                   if (context.dataset.yAxisID === 'yAlt') return `${label}: ${Math.round(val)} m`;
                   return `${label}: ${val}`;
                 }
@@ -665,13 +770,14 @@
     function setPmcPeriod(period) {
       currentPmcPeriod = period;
 
-      const periods = ['all', '1y', '6m', '3m', '2m', '1m'];
+      const periods = ['2m', '3m', '6m', '1y', 'all'];
       periods.forEach(p => {
         const btn = document.getElementById(`btn-pmc-${p}`);
+        if (!btn) return;
         if (p === period) {
-          btn.className = 'px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-500 text-slate-950 transition';
+          btn.className = 'px-2 sm:px-2.5 py-1 text-[11px] sm:text-xs font-semibold rounded-lg bg-emerald-500 text-slate-950 transition whitespace-nowrap';
         } else {
-          btn.className = 'px-2.5 py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition';
+          btn.className = 'px-2 sm:px-2.5 py-1 text-[11px] sm:text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition whitespace-nowrap';
         }
       });
 
@@ -891,4 +997,5 @@
     loadWorkouts();
   </script>
 </body>
+
 </html>

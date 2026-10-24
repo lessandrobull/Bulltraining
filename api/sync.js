@@ -66,11 +66,13 @@ export default async function handler(req, res) {
       const startTime = act.start_date_local || act.start_date;
       const existingWorkout = existingMap.get(startTime);
 
-      // Treinos que já possuem laps E linha de pace válida são ignorados
+      // Treinos que já possuem laps E linha de pace válida são ignorados,
+      // EXCETO se contiverem a volta fantasma residual (<= 5 segundos)
       const hasLaps = existingWorkout && Array.isArray(existingWorkout.laps) && existingWorkout.laps.length > 0;
       const hasPaceInTrackpoints = existingWorkout && Array.isArray(existingWorkout.trackpoints) && existingWorkout.trackpoints.length > 0 && existingWorkout.trackpoints.some(tp => tp.pace !== null && tp.pace !== undefined);
+      const hasBuggyLaps = existingWorkout && Array.isArray(existingWorkout.laps) && existingWorkout.laps.some(l => (l.seconds || 0) <= 5);
 
-      if (hasLaps && hasPaceInTrackpoints) {
+      if (hasLaps && hasPaceInTrackpoints && !hasBuggyLaps) {
         continue;
       }
 
@@ -131,9 +133,20 @@ export default async function handler(req, res) {
         });
         if (actDetailRes.ok) {
           const actDetail = await actDetailRes.json();
-          const intervals = actDetail.icu_intervals || actDetail.intervals || [];
-          if (intervals.length > 1) {
-            laps = intervals.map((iv, idx) => ({
+          // Prioriza as voltas oficiais do Garmin (intervals) sobre os blocos calculados (icu_intervals)
+          const rawIntervals = (actDetail.intervals && actDetail.intervals.length > 1)
+            ? actDetail.intervals
+            : (actDetail.icu_intervals || []);
+
+          // Descarta resíduos e micropassos espúrios (tempo <= 5s ou distância < 30m)
+          const validIntervals = rawIntervals.filter(iv => {
+            const secs = Math.round(iv.moving_time || iv.elapsed_time || 0);
+            const dist = Math.round(iv.distance || 0);
+            return secs > 5 && dist >= 30;
+          });
+
+          if (validIntervals.length > 1) {
+            laps = validIntervals.map((iv, idx) => ({
               lap: idx + 1,
               seconds: Math.round(iv.moving_time || iv.elapsed_time || 0),
               meters: Math.round(iv.distance || 0),
@@ -230,11 +243,11 @@ export default async function handler(req, res) {
       }
     }
 
-    return res.status(200).json({ 
-      success: true, 
-      novosSincronizados: syncedCount, 
-      antigosAtualizadosComPace: updatedCount, 
-      totalAnalisados: activities.length 
+    return res.status(200).json({
+      success: true,
+      novosSincronizados: syncedCount,
+      antigosAtualizadosComPace: updatedCount,
+      totalAnalisados: activities.length
     });
   } catch (err) {
     return res.status(500).json({ error: err.message });
