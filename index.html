@@ -17,11 +17,15 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    /* Oculta a barra de rolagem visual mantendo a rolagem ativa */
-    #workoutDetailContainer::-webkit-scrollbar {
-      display: none;
+    /* Zera a largura da barra de rolagem mantendo a rolagem e o pull-to-refresh ativos */
+    ::-webkit-scrollbar {
+      width: 0px !important;
+      height: 0px !important;
+      background: transparent !important;
     }
 
+    html,
+    body,
     #workoutDetailContainer {
       -ms-overflow-style: none;
       scrollbar-width: none;
@@ -29,7 +33,7 @@
   </style>
 </head>
 
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans pb-10">
+<body class="bg-slate-950 text-slate-100 font-sans m-0 p-0">
 
   <!-- Configuração do Supabase -->
   <script>
@@ -39,14 +43,14 @@
   </script>
 
   <!-- Cabeçalho Compacto -->
-  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 px-3 py-2 sm:px-6 sm:py-2.5 shadow-md">
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 px-3 py-0 sm:px-6 sm:py-2.5 shadow-md">
     <div class="max-w-6xl mx-auto flex justify-between items-center gap-2">
-      <div class="flex items-center gap-1">
-        <img src="icon-64.png" alt="Bull Training" style="height: 75px; width: 75px;"
+      <div class="flex items-center gap-">
+        <img src="icon-64.png" alt="Bull Training" style="height: 80px; width: 80px; margin-top: 4px; margin-left: 6px;"
           class="rounded-lg shrink-0 shadow">
-        <div class="flex flex-col justify-center">
-          <h1 class="text-lg sm:text-xl font-bold tracking-tight text-emerald-400 leading-tight">Hub de Treinos</h1>
-          <p class="text-[11px] sm:text-xs text-slate-400 leading-tight mt-0.5">Gestão de Carga & Evolução</p>
+        <div class="flex flex-col justify-center" style="position: relative; top: 4px;">
+          <h1 class="text-[23px] ml-1.5 sm:text-xl font-bold tracking-tight text-emerald-400 leading-tight">Hub de Treinos</h1>
+          <p class="text-[13px] sm:text-xs text-slate-400 leading-tight mt-0.5">Gestão de Carga & Evolução</p>
         </div>
       </div>
 
@@ -67,7 +71,7 @@
 
     <!-- Navegação por Abas -->
     <div
-      class="max-w-6xl mx-auto flex gap-6 mt-1.5 sm:mt-2 border-t border-slate-800/60 pt-1.5 text-xs sm:text-sm font-medium">
+      class="max-w-6xl mx-auto flex gap-6 mt-1.5 sm:mt-2 border-t border-slate-800/60 pt-1.5 pl-3.5 text-xs sm:text-sm font-medium">
       <button onclick="switchTab('tab-workouts')" id="btn-tab-workouts"
         class="text-emerald-400 border-b-2 border-emerald-400 pb-0.5">Treinos</button>
       <button onclick="switchTab('tab-pmc')" id="btn-tab-pmc" class="text-slate-400 hover:text-slate-200 pb-0.5">Fitness
@@ -102,15 +106,15 @@
   </div>
 
   <!-- Conteúdo Principal -->
-  <main class="max-w-6xl mx-auto px-2 sm:px-6 py-2.5 sm:py-3.5 space-y-3 sm:space-y-4">
+  <main class="max-w-6xl mx-auto px-2 sm:px-6 py-0.4 sm:py-3.5 space-y-3 sm:space-y-4">
 
     <div id="statusAlert" class="hidden p-3 rounded-xl text-sm border"></div>
 
     <!-- ABA 1: TREINOS -->
     <section id="tab-workouts" class="flex-1 flex flex-col overflow-hidden">
       <div id="workoutListContainer"
-        class="bg-slate-900 border border-slate-800 px-2.5 py-2 sm:p-4 rounded-2xl shadow flex-1 flex flex-col justify-between overflow-hidden">
-        <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider mb-1 shrink-0">Histórico de
+        class="bg-slate-900 border border-slate-800 px-2.5 py-4 sm:p-4 rounded-2xl shadow h-[600px] flex flex-col justify-between overflow-hidden">
+        <h2 class="ml-2 text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider mb-1 shrink-0">Histórico de
           Atividades
         </h2>
         <div id="workoutList" class="space-y-1 flex-1 flex flex-col justify-start overflow-hidden">
@@ -133,9 +137,9 @@
       <!-- Detalhes do Treino -->
       <div id="workoutDetailContainer"
         class="bg-slate-900 border border-slate-800 p-2.5 sm:p-4 rounded-2xl shadow space-y-2 hidden overflow-y-auto max-h-[calc(100vh-120px)] pb-6">
-        <div class="border-b border-slate-800 pb-1">
+        <div class="pb-1">
           <div class="flex items-center justify-between gap-2">
-            <div class="min-w-0 flex-1">
+            <div class="ml-2 min-w-0 flex-1">
               <h3 id="workoutLocation" class="text-xs sm:text-base font-bold text-slate-100 truncate">-</h3>
               <p id="workoutDate" class="text-[11px] sm:text-xs text-slate-400 font-medium mt-0.5">-</p>
             </div>
@@ -155,6 +159,7 @@
           </div>
         </div>
 
+        <div style="margin-top: 0px;" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center"></div>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center">
           <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
             <span class="text-xs text-slate-400 font-medium">Distância</span>
@@ -207,29 +212,30 @@
     <section id="tab-pmc" class="hidden flex-1 flex flex-col overflow-hidden">
       <!-- Card Externo Único (Estrutura idêntica à tela de detalhes de treino) -->
       <div
-        class="bg-slate-900 border border-slate-800 p-2.5 sm:p-4 rounded-2xl shadow flex-1 flex flex-col justify-between overflow-hidden gap-2 sm:gap-2.5">
+        class="bg-slate-900 border border-slate-800 p-2.5 sm:p-4 rounded-2xl shadow h-[600px] flex flex-col justify-between overflow-hidden gap-2 sm:gap-2.5">
 
         <!-- Cabeçalho: Título e Data no padrão exato da tela de treino -->
-        <div class="border-b border-slate-800 pb-1.5 shrink-0">
-          <h2 class="text-xs sm:text-sm font-bold text-slate-100 uppercase tracking-wider">STATUS ATUAL DE CARGA</h2>
-          <p id="statusDate" class="text-[11px] sm:text-xs text-slate-400 font-medium mt-0.5">-</p>
+        <div class="border-b border-slate-800 pb-1.5 py-1.5 shrink-0">
+          <h2 class="ml-2 text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider mb-1 shrink-0">STATUS
+            ATUAL DE CARGA</h2>
+          <p id="statusDate" class="ml-2 text-[11px] sm:text-xs text-slate-400 font-medium mt-0.5">-</p>
         </div>
 
-        <!-- 4 Cards Menores: Mesmas classes, paddings e fontes dos cards de métricas do treino -->
+        <!-- 4 Cards Menores: Estrutura idêntica aos cards de métricas de treino -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center shrink-0">
-          <div class="bg-slate-950 p-2 sm:p-2.5 rounded-xl border border-slate-800">
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
             <span class="text-xs text-slate-400 font-medium">Fitness (CTL)</span>
             <p id="statusCtl" class="text-base sm:text-lg font-black text-sky-400 mt-0.5">-</p>
           </div>
-          <div class="bg-slate-950 p-2 sm:p-2.5 rounded-xl border border-slate-800">
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
             <span class="text-xs text-slate-400 font-medium">Fadiga (ATL)</span>
             <p id="statusAtl" class="text-base sm:text-lg font-black text-rose-400 mt-0.5">-</p>
           </div>
-          <div class="bg-slate-950 p-2 sm:p-2.5 rounded-xl border border-slate-800">
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
             <span class="text-xs text-slate-400 font-medium">Forma (TSB)</span>
             <p id="statusTsb" class="text-base sm:text-lg font-black text-amber-400 mt-0.5">-</p>
           </div>
-          <div class="bg-slate-950 p-2 sm:p-2.5 rounded-xl border border-slate-800">
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
             <span class="text-xs text-slate-400 font-medium">Zona de Rendimento</span>
             <p id="statusZone" class="text-xs sm:text-sm font-bold text-emerald-400 mt-0.5 truncate">-</p>
           </div>
@@ -259,25 +265,22 @@
               </div>
             </div>
 
-            <!-- 6 Botões de Período em Linha Única com fonte text-xs (12px) restaurada -->
-            <div class="grid grid-cols-6 gap-1 w-full bg-slate-900 p-1 rounded-xl border border-slate-800">
-              <button onclick="setPmcPeriod('1m')" id="btn-pmc-1m"
-                class="w-full py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">1
-                Mês</button>
+            <!-- 5 Botões de Período Simétricos com Folga Expandida -->
+            <div class="grid grid-cols-5 gap-1.5 w-full bg-slate-900 p-1 rounded-xl border border-slate-800">
               <button onclick="setPmcPeriod('2m')" id="btn-pmc-2m"
-                class="w-full py-1 text-xs font-semibold rounded-lg bg-emerald-500 text-slate-950 transition text-center truncate">2
+                class="w-full py-1.5 text-xs font-semibold rounded-lg bg-emerald-500 text-slate-950 transition text-center truncate">2
                 Meses</button>
               <button onclick="setPmcPeriod('3m')" id="btn-pmc-3m"
-                class="w-full py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">3
+                class="w-full py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">3
                 Meses</button>
               <button onclick="setPmcPeriod('6m')" id="btn-pmc-6m"
-                class="w-full py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">6
+                class="w-full py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">6
                 Meses</button>
               <button onclick="setPmcPeriod('1y')" id="btn-pmc-1y"
-                class="w-full py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">1
-                Ano</button>
+                class="w-full py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">12
+                meses</button>
               <button onclick="setPmcPeriod('all')" id="btn-pmc-all"
-                class="w-full py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">Tudo</button>
+                class="w-full py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">Histórico</button>
             </div>
           </div>
 
@@ -292,11 +295,12 @@
     </section>
 
     <!-- ABA 3: VOLUME -->
-    <section id="tab-volume" class="hidden flex-1 flex flex-col gap-1.5 overflow-hidden">
+    <section id="tab-volume" class="hidden flex-1 flex flex-col gap-2.5 overflow-hidden">
       <!-- Card Superior: Volume Semanal (50% do espaço útil) -->
       <div
-        class="bg-slate-900 border border-slate-800 px-2.5 py-2 sm:p-4 rounded-2xl shadow flex-1 flex flex-col overflow-hidden">
-        <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider mb-1 shrink-0">Volume Semanal
+        class="bg-slate-900 border border-slate-800 px-2.5 py-4 sm:p-4 rounded-2xl shadow h-[294px] flex flex-col justify-between overflow-hidden">
+        <h2 class="ml-2 text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider mb-1 shrink-0">Volume
+          Semanal
           (km)</h2>
         <div class="flex-1 w-full relative min-h-0">
           <canvas id="weeklyVolumeChart"></canvas>
@@ -305,8 +309,9 @@
 
       <!-- Card Inferior: Volume Mensal (50% do espaço útil) -->
       <div
-        class="bg-slate-900 border border-slate-800 px-2.5 py-2 sm:p-4 rounded-2xl shadow flex-1 flex flex-col overflow-hidden">
-        <h2 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider mb-1 shrink-0">Volume Mensal
+        class="bg-slate-900 border border-slate-800 px-2.5 py-4 sm:p-4 rounded-2xl shadow h-[294px] flex flex-col justify-between overflow-hidden">
+        <h2 class="ml-2 text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider mb-1 shrink-0">Volume
+          Mensal
           (km)</h2>
         <div class="flex-1 w-full relative min-h-0">
           <canvas id="monthlyVolumeChart"></canvas>
@@ -827,18 +832,18 @@
       });
     }
 
-    // Seletor de Períodos PMC (6 botões simétricos com fonte text-xs de 12px)
+    // Seletor de Períodos PMC (5 botões simétricos com folga py-1.5)
     function setPmcPeriod(period) {
       currentPmcPeriod = period;
 
-      const periods = ['1m', '2m', '3m', '6m', '1y', 'all'];
+      const periods = ['2m', '3m', '6m', '1y', 'all'];
       periods.forEach(p => {
         const btn = document.getElementById(`btn-pmc-${p}`);
         if (!btn) return;
         if (p === period) {
-          btn.className = 'w-full py-1 text-xs font-semibold rounded-lg bg-emerald-500 text-slate-950 transition text-center truncate';
+          btn.className = 'w-full py-1.5 text-xs font-semibold rounded-lg bg-emerald-500 text-slate-950 transition text-center truncate';
         } else {
-          btn.className = 'w-full py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate';
+          btn.className = 'w-full py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate';
         }
       });
 
@@ -875,6 +880,7 @@
 
       let ctl = 0;
       let atl = 0;
+      let tsb = 0;
 
       for (let d = new Date(firstDate); d <= targetEndDate; d.setDate(d.getDate() + 1)) {
         const dStr = d.toISOString().split('T')[0];
@@ -882,7 +888,7 @@
 
         ctl = ctl + (dayTrimp - ctl) / 42;
         atl = atl + (dayTrimp - atl) / 7;
-        const tsb = ctl - atl;
+        tsb = ctl - atl;
 
         fullDateObjs.push(new Date(d));
         fullDates.push(d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
