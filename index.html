@@ -205,18 +205,18 @@
 
     <!-- ABA 2: FITNESS & FADIGA -->
     <section id="tab-pmc" class="hidden flex-1 flex flex-col overflow-hidden">
-      <!-- Card Externo Único (Sem card aninhado embaixo) -->
+      <!-- Card Externo Único (Estrutura idêntica à tela de detalhes de treino) -->
       <div
-        class="bg-slate-900 border border-slate-800 p-2.5 sm:p-4 rounded-2xl shadow flex-1 flex flex-col justify-between overflow-hidden gap-2">
+        class="bg-slate-900 border border-slate-800 p-2.5 sm:p-4 rounded-2xl shadow flex-1 flex flex-col justify-between overflow-hidden gap-2 sm:gap-2.5">
 
         <!-- Cabeçalho: Título e Data no padrão exato da tela de treino -->
-        <div class="border-b border-slate-800/80 pb-1.5 shrink-0">
+        <div class="border-b border-slate-800 pb-1.5 shrink-0">
           <h2 class="text-xs sm:text-sm font-bold text-slate-100 uppercase tracking-wider">STATUS ATUAL DE CARGA</h2>
           <p id="statusDate" class="text-[11px] sm:text-xs text-slate-400 font-medium mt-0.5">-</p>
         </div>
 
-        <!-- 4 Cards Menores de Métricas (Mesma proporção da foto de treino) -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center shrink-0">
+        <!-- 4 Cards Menores: Mesmas classes, paddings e fontes dos cards de métricas do treino -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center shrink-0">
           <div class="bg-slate-950 p-2 sm:p-2.5 rounded-xl border border-slate-800">
             <span class="text-xs text-slate-400 font-medium">Fitness (CTL)</span>
             <p id="statusCtl" class="text-base sm:text-lg font-black text-sky-400 mt-0.5">-</p>
@@ -235,52 +235,57 @@
           </div>
         </div>
 
-        <!-- Linha Divisória Suave e Área de Gestão de Desempenho Integrada -->
-        <div class="border-t border-slate-800/80 pt-2 flex-1 flex flex-col justify-between overflow-hidden gap-1.5">
-          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 shrink-0">
-            <h3 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider">GESTÃO DE DESEMPENHO</h3>
-            <!-- Legendas text-xs -->
-            <div class="flex items-center gap-3 text-xs whitespace-nowrap">
-              <span class="inline-flex items-center gap-1">
-                <span class="w-2 h-2 rounded-full bg-sky-400 inline-block"></span>
-                <span class="text-slate-300">Fitness 42</span>
-              </span>
-              <span class="inline-flex items-center gap-1">
-                <span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span>
-                <span class="text-slate-300">Fadiga 7</span>
-              </span>
-              <span class="inline-flex items-center gap-1">
-                <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
-                <span class="text-slate-300">Forma</span>
-              </span>
+        <!-- Card Escuro Interno: Gestão de Desempenho (Modelo do card de Zonas Cardíacas) -->
+        <div
+          class="bg-slate-950 p-2.5 sm:p-4 rounded-xl border border-slate-800 flex-1 flex flex-col justify-between overflow-hidden gap-1.5 sm:gap-2">
+
+          <div class="space-y-1.5 shrink-0">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+              <h3 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider">GESTÃO DE DESEMPENHO</h3>
+              <!-- Legendas com fonte text-xs (12px) restaurada -->
+              <div class="flex items-center gap-3 text-xs whitespace-nowrap">
+                <span class="inline-flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-sky-400 inline-block"></span>
+                  <span class="text-slate-300">Fitness 42</span>
+                </span>
+                <span class="inline-flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span>
+                  <span class="text-slate-300">Fadiga 7</span>
+                </span>
+                <span class="inline-flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
+                  <span class="text-slate-300">Forma</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- 6 Botões de Período em Linha Única com fonte text-xs (12px) restaurada -->
+            <div class="grid grid-cols-6 gap-1 w-full bg-slate-900 p-1 rounded-xl border border-slate-800">
+              <button onclick="setPmcPeriod('1m')" id="btn-pmc-1m"
+                class="w-full py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">1
+                Mês</button>
+              <button onclick="setPmcPeriod('2m')" id="btn-pmc-2m"
+                class="w-full py-1 text-xs font-semibold rounded-lg bg-emerald-500 text-slate-950 transition text-center truncate">2
+                Meses</button>
+              <button onclick="setPmcPeriod('3m')" id="btn-pmc-3m"
+                class="w-full py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">3
+                Meses</button>
+              <button onclick="setPmcPeriod('6m')" id="btn-pmc-6m"
+                class="w-full py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">6
+                Meses</button>
+              <button onclick="setPmcPeriod('1y')" id="btn-pmc-1y"
+                class="w-full py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">1
+                Ano</button>
+              <button onclick="setPmcPeriod('all')" id="btn-pmc-all"
+                class="w-full py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate">Tudo</button>
             </div>
           </div>
 
-          <!-- 6 Botões de Período espalhados de ponta a ponta com folga total -->
-          <div class="grid grid-cols-6 gap-1.5 w-full shrink-0">
-            <button onclick="setPmcPeriod('1m')" id="btn-pmc-1m"
-              class="w-full py-1.5 text-xs font-medium rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-400 border border-slate-800/80 transition text-center truncate">1
-              Mês</button>
-            <button onclick="setPmcPeriod('2m')" id="btn-pmc-2m"
-              class="w-full py-1.5 text-xs font-semibold rounded-xl bg-emerald-500 text-slate-950 transition text-center truncate">2
-              Meses</button>
-            <button onclick="setPmcPeriod('3m')" id="btn-pmc-3m"
-              class="w-full py-1.5 text-xs font-medium rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-400 border border-slate-800/80 transition text-center truncate">3
-              Meses</button>
-            <button onclick="setPmcPeriod('6m')" id="btn-pmc-6m"
-              class="w-full py-1.5 text-xs font-medium rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-400 border border-slate-800/80 transition text-center truncate">6
-              Meses</button>
-            <button onclick="setPmcPeriod('1y')" id="btn-pmc-1y"
-              class="w-full py-1.5 text-xs font-medium rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-400 border border-slate-800/80 transition text-center truncate">1
-              Ano</button>
-            <button onclick="setPmcPeriod('all')" id="btn-pmc-all"
-              class="w-full py-1.5 text-xs font-medium rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-400 border border-slate-800/80 transition text-center truncate">Tudo</button>
-          </div>
-
-          <!-- Container do Gráfico com altura estável (h-56 no celular / h-64 em telas maiores) -->
-          <div class="h-56 sm:h-64 w-full relative pt-1">
+          <!-- Área do Gráfico PMC preenchendo o espaço útil interno restante -->
+          <div class="flex-1 w-full relative min-h-0 pt-0.5">
             <canvas id="pmcChart"></canvas>
           </div>
+
         </div>
 
       </div>
@@ -822,7 +827,7 @@
       });
     }
 
-    // Seletor de Períodos PMC (6 botões simétricos com fonte text-xs e folga completa)
+    // Seletor de Períodos PMC (6 botões simétricos com fonte text-xs de 12px)
     function setPmcPeriod(period) {
       currentPmcPeriod = period;
 
@@ -831,9 +836,9 @@
         const btn = document.getElementById(`btn-pmc-${p}`);
         if (!btn) return;
         if (p === period) {
-          btn.className = 'w-full py-1.5 text-xs font-semibold rounded-xl bg-emerald-500 text-slate-950 transition text-center truncate';
+          btn.className = 'w-full py-1 text-xs font-semibold rounded-lg bg-emerald-500 text-slate-950 transition text-center truncate';
         } else {
-          btn.className = 'w-full py-1.5 text-xs font-medium rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-400 border border-slate-800/80 transition text-center truncate';
+          btn.className = 'w-full py-1 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 transition text-center truncate';
         }
       });
 
@@ -941,10 +946,10 @@
       const canvas = document.getElementById('pmcChart');
       if (!canvas) return;
 
-      // Corte da janela de exibição ancorado na data do último treino existente
+      // Corte da janela de exibição conforme período selecionado
       let startIndex = 0;
       if (currentPmcPeriod !== 'all') {
-        const cutoff = new Date(targetEndDate);
+        const cutoff = new Date(today);
         if (currentPmcPeriod === '1y') cutoff.setFullYear(cutoff.getFullYear() - 1);
         else if (currentPmcPeriod === '6m') cutoff.setMonth(cutoff.getMonth() - 6);
         else if (currentPmcPeriod === '3m') cutoff.setMonth(cutoff.getMonth() - 3);
