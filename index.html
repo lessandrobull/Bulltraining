@@ -1084,7 +1084,11 @@
         type: 'bar',
         data: {
           labels: weekLabels,
-          datasets: [{ label: 'km / semana', data: weekData, backgroundColor: '#10b981', borderRadius: 6 }]
+          datasets: [{ label: 'km / semana', data: weekData, backgroundColor: 'rgba(52, 211, 123, 0.80)',
+  borderColor: '#34d399',
+  borderWidth: 1.5,
+  borderRadius: 6
+}]
         },
         options: {
           responsive: true,
@@ -1109,7 +1113,14 @@
         type: 'bar',
         data: {
           labels: monthLabels,
-          datasets: [{ label: 'km / mês', data: monthData, backgroundColor: '#6366f1', borderRadius: 6 }]
+          datasets: [{
+  label: 'km / mês',
+  data: monthData,
+  backgroundColor: 'rgba(33, 182, 255, 0.80)',
+  borderColor: '#21b6ff',
+  borderWidth: 1.5,
+  borderRadius: 6
+}]
         },
         options: {
           responsive: true,
