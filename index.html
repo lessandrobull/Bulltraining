@@ -898,11 +898,17 @@
         fullTsb.push(tsb.toFixed(1));
       }
 
-      // 1. Atualiza a Data no Cabeçalho no mesmo padrão da tela de treino
-      const dt = getWorkoutDateTime(latestWorkout);
+      // 1. Atualiza a Data no Cabeçalho para o dia de hoje (sem hora)
       const elDate = document.getElementById('statusDate');
       if (elDate) {
-        elDate.textContent = `${dt.dayName}, ${dt.day}/${dt.month}/${dt.year}, ${dt.hours}:${dt.minutes}`;
+        const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        const now = new Date();
+        const dayName = days[now.getDay()];
+        const day = now.getDate().toString().padStart(2, '0');
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        const year = now.getFullYear();
+
+        elDate.textContent = `${dayName}, ${day}/${month}/${year}`;
       }
 
       // 2. Atualiza os 4 Cards de Diagnóstico (Status Atual de Carga)
@@ -1084,11 +1090,12 @@
         type: 'bar',
         data: {
           labels: weekLabels,
-          datasets: [{ label: 'km / semana', data: weekData, backgroundColor: 'rgba(52, 211, 123, 0.80)',
-  borderColor: '#34d399',
-  borderWidth: 1.5,
-  borderRadius: 6
-}]
+          datasets: [{
+            label: 'km / semana', data: weekData, backgroundColor: 'rgba(52, 211, 123, 0.80)',
+            borderColor: '#34d399',
+            borderWidth: 1.5,
+            borderRadius: 6
+          }]
         },
         options: {
           responsive: true,
@@ -1114,13 +1121,13 @@
         data: {
           labels: monthLabels,
           datasets: [{
-  label: 'km / mês',
-  data: monthData,
-  backgroundColor: 'rgba(33, 182, 255, 0.80)',
-  borderColor: '#21b6ff',
-  borderWidth: 1.5,
-  borderRadius: 6
-}]
+            label: 'km / mês',
+            data: monthData,
+            backgroundColor: 'rgba(33, 182, 255, 0.80)',
+            borderColor: '#21b6ff',
+            borderWidth: 1.5,
+            borderRadius: 6
+          }]
         },
         options: {
           responsive: true,
