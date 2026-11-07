@@ -196,7 +196,8 @@
           <table class="w-full text-left text-xs border-collapse">
             <thead>
               <tr class="text-slate-400 border-b border-slate-800">
-                <th class="py-2">Km</th>
+                <th class="py-2">Volta</th>
+                <th class="py-2">Distância</th>
                 <th class="py-2">Tempo</th>
                 <th class="py-2">Pace</th>
                 <th class="py-2">FC Média</th>
@@ -610,10 +611,12 @@
       const laps = rawLaps.filter(lap => (lap.seconds || 0) > 5);
 
       splitsBody.innerHTML = laps.map((lap, idx) => {
+        const lapDist = lap.meters ? `${((lap.meters || 0) / 1000).toFixed(2)} km` : '-';
         const lapPaceStr = lap.pace ? `${formatTime(lap.pace)} /km` : formatPace(lap.seconds, lap.meters);
         return `
           <tr class="hover:bg-slate-800/40 text-slate-300">
             <td class="py-2 font-semibold text-slate-200">${idx + 1}</td>
+            <td class="py-2 text-slate-300 font-medium">${lapDist}</td>
             <td class="py-2">${formatTime(lap.seconds)}</td>
             <td class="py-2 font-bold text-emerald-400">${lapPaceStr}</td>
             <td class="py-2">${lap.avgHr || '-'} bpm</td>
