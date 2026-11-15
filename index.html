@@ -537,10 +537,7 @@
         const pace = formatPace(w.duration_seconds, w.distance_meters);
         const trimpVal = Math.round(w.trimp_score || 0);
         const isEstimatedTrimp = (!w.avg_heart_rate || w.avg_heart_rate <= userHrRest) && trimpVal > 0;
-        const trimpLabel = isEstimatedTrimp ? `TRIMP ~${trimpVal} (est.)` : `TRIMP ${trimpVal}`;
-        const trimpBadgeClass = isEstimatedTrimp
-          ? 'bg-amber-950/60 text-amber-300 border border-amber-800/60'
-          : 'bg-slate-800 text-slate-300';
+        const trimpLabel = isEstimatedTrimp ? `TRIMP ~${trimpVal}` : `TRIMP ${trimpVal}`;
 
         return `
           <button onclick="openWorkoutDetail('${w.id}')" class="w-full text-left p-2 sm:p-3 rounded-xl bg-slate-950/70 hover:bg-slate-800 border border-slate-800/80 transition flex items-center justify-between gap-2 group">
@@ -556,7 +553,7 @@
               </div>
             </div>
             <div class="shrink-0 text-right">
-              <span class="text-[11px] sm:text-xs ${trimpBadgeClass} px-2.5 py-1 rounded-full font-medium whitespace-nowrap inline-block">${trimpLabel}</span>
+              <span class="text-[11px] sm:text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full font-medium whitespace-nowrap inline-block">${trimpLabel}</span>
             </div>
           </button>
         `;
@@ -589,14 +586,10 @@
       const sportName = translateSport(w.sport);
       const trimpVal = Math.round(w.trimp_score || 0);
       const isEstimatedTrimp = (!w.avg_heart_rate || w.avg_heart_rate <= userHrRest) && trimpVal > 0;
-      const trimpEl = document.getElementById('workoutTrimp');
 
       document.getElementById('workoutLocation').textContent = `${sportName}, Indaiatuba, Brasil`;
       document.getElementById('workoutDate').textContent = `${dt.dayName}, ${dt.day}/${dt.month}/${dt.year}, ${dt.hours}:${dt.minutes}`;
-      trimpEl.textContent = isEstimatedTrimp ? `TRIMP ~${trimpVal} (est.)` : `TRIMP ${trimpVal}`;
-      trimpEl.className = isEstimatedTrimp
-        ? 'text-[11px] sm:text-xs font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-amber-950/60 text-amber-300 border border-amber-800/60 whitespace-nowrap'
-        : 'text-[11px] sm:text-xs font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-slate-800 text-slate-300 whitespace-nowrap';
+      document.getElementById('workoutTrimp').textContent = isEstimatedTrimp ? `TRIMP ~${trimpVal}` : `TRIMP ${trimpVal}`;
 
       document.getElementById('detDist').textContent = `${((w.distance_meters || 0) / 1000).toFixed(2)} km`;
       document.getElementById('detTime').textContent = formatTime(w.duration_seconds);
